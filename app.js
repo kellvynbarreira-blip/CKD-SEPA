@@ -105,7 +105,7 @@ function generateQR() {
     const logoW = qrW * (Number(config.logoPercent || 20) / 100);
     const ratio = logoW / logo.width;
     const logoH = logo.height * ratio;
-    const circleMultiplier = Number(config.circleMarginPercent || 150) / 100;
+    const circleMultiplier = Number(config.circleMarginPercent || 140) / 100;
     const circleD = Math.max(logoW, logoH) * circleMultiplier;
     const cx = qrW / 2;
     const cy = qrW / 2;
@@ -193,7 +193,7 @@ function saveAdminForm() {
   config.iban = document.getElementById("adminIban").value.replace(/\s+/g, "").trim();
   config.bic = document.getElementById("adminBic").value.replace(/\s+/g, "").trim();
   config.logoPercent = Math.max(5, Math.min(25, Number(document.getElementById("adminLogoPercent").value || 20)));
-  config.circleMarginPercent = Math.max(120, Math.min(220, Number(document.getElementById("adminCircleMarginPercent").value || 160)));
+  config.circleMarginPercent = Math.max(120, Math.min(220, Number(document.getElementById("adminCircleMarginPercent").value || 140)));
   config.logoHighlightStyle = document.getElementById("adminLogoHighlightStyle").value || "shadow-border";
   config.congregations = document.getElementById("adminCongregations").value.split("\n").map(x => x.trim()).filter(Boolean);
 
