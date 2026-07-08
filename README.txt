@@ -1,7 +1,7 @@
 # CKD - Gerador SEPA / GiroCode v4
 
 ## Acesso ADM
-Clique 5 vezes no logo da CKD.
+Clique 3 vezes no logo da CKD.
 
 Senha padrão:
 CKD2025
