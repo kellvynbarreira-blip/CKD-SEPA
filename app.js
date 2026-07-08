@@ -8,10 +8,10 @@ const customRefBox = document.getElementById("customRefBox");
 const customRef = document.getElementById("customRef");
 const finalReference = document.getElementById("finalReference");
 const qrCanvas = document.getElementById("qrCanvas");
-const statusEl = document.getElementById("status");
 const loginModal = document.getElementById("loginModal");
 const passwordInput = document.getElementById("passwordInput");
 const loginError = document.getElementById("loginError");
+const toastEl = document.getElementById("toast");
 
 let logoClicks = 0;
 let logoClickTimer = null;
@@ -25,19 +25,14 @@ function loadConfig() {
   catch { return cloneConfig(DEFAULT_CONFIG); }
 }
 
-function saveConfig() { localStorage.setItem("ckdConfig", JSON.stringify(config)); }
-
-function resetConfig() {
-  localStorage.removeItem("ckdConfig");
-  config = cloneConfig(DEFAULT_CONFIG);
-  init();
-  showUser();
-  setStatus("Configurações restauradas.");
+function saveConfig() {
+  localStorage.setItem("ckdConfig", JSON.stringify(config));
 }
 
-function setStatus(message) {
-  statusEl.textContent = message;
-  setTimeout(() => { if (statusEl.textContent === message) statusEl.textContent = ""; }, 2500);
+function toast(message) {
+  toastEl.textContent = message;
+  toastEl.classList.add("show");
+  setTimeout(() => toastEl.classList.remove("show"), 2200);
 }
 
 function openLogin() {
@@ -46,52 +41,47 @@ function openLogin() {
   loginError.classList.add("hidden");
   setTimeout(() => passwordInput.focus(), 50);
 }
-
 function closeLogin() { loginModal.classList.add("hidden"); }
-
 function tryLogin() {
-  if (passwordInput.value === config.adminPassword) { closeLogin(); showAdmin(); }
-  else loginError.classList.remove("hidden");
+  if (passwordInput.value === config.adminPassword) {
+    closeLogin();
+    showAdmin();
+  } else {
+    loginError.classList.remove("hidden");
+  }
 }
-
 function showAdmin() {
   userPanel.classList.add("hidden");
   adminPanel.classList.remove("hidden");
   fillAdminForm();
-  setStatus("ADM aberto.");
+  toast("ADM aberto.");
 }
-
 function showUser() {
   adminPanel.classList.add("hidden");
   userPanel.classList.remove("hidden");
   generateQR();
 }
-
 function buildReference() {
   let value = referenceSelect.value === "__custom__" ? customRef.value : referenceSelect.value;
   value = (value || "Backnang").trim();
   value = value.replace(/^CKD[-\s]*/i, "");
   return config.referencePrefix + value;
 }
-
 function makePayload() {
   const ref = buildReference();
   finalReference.textContent = ref;
   return [
-    "BCD","002","1","SCT",
+    "BCD", "002", "1", "SCT",
     config.bic.replace(/\s+/g, ""),
     config.beneficiaryName,
     config.iban.replace(/\s+/g, ""),
-    "","","",ref,""
+    "", "", "", ref, ""
   ].join("\n");
 }
-
 function generateQR() {
-  const payload = makePayload();
-
   new QRious({
     element: qrCanvas,
-    value: payload,
+    value: makePayload(),
     size: 1400,
     level: "H",
     background: "white",
@@ -105,19 +95,24 @@ function generateQR() {
     const logoW = qrW * (Number(config.logoPercent || 20) / 100);
     const ratio = logoW / logo.width;
     const logoH = logo.height * ratio;
-    const circleMultiplier = Number(config.circleMarginPercent || 140) / 100;
-    const circleD = Math.max(logoW, logoH) * circleMultiplier;
+
+    const circleD = Math.max(logoW, logoH) * (Number(config.circleMarginPercent || 160) / 100);
     const cx = qrW / 2;
     const cy = qrW / 2;
     const radius = circleD / 2;
-    const highlight = config.logoHighlightStyle || "shadow-border";
+
+    const shadowOpacity = Number(config.shadowOpacity || 0) / 100;
+    const shadowBlur = Number(config.shadowBlur || 0);
+    const shadowOffset = Number(config.shadowOffset || 0);
+    const borderWidth = Number(config.borderWidth || 0);
+    const borderOpacity = Number(config.borderOpacity || 0) / 100;
 
     ctx.save();
-    if (highlight === "shadow" || highlight === "shadow-border") {
-      ctx.shadowColor = "rgba(0,0,0,0.28)";
-      ctx.shadowBlur = qrW * 0.018;
+    if (shadowOpacity > 0 && shadowBlur > 0) {
+      ctx.shadowColor = `rgba(0,0,0,${shadowOpacity})`;
+      ctx.shadowBlur = shadowBlur;
       ctx.shadowOffsetX = 0;
-      ctx.shadowOffsetY = qrW * 0.006;
+      ctx.shadowOffsetY = shadowOffset;
     }
     ctx.beginPath();
     ctx.arc(cx, cy, radius, 0, Math.PI * 2);
@@ -125,22 +120,21 @@ function generateQR() {
     ctx.fill();
     ctx.restore();
 
-    if (highlight === "border" || highlight === "shadow-border") {
+    if (borderWidth > 0 && borderOpacity > 0) {
       ctx.save();
       ctx.beginPath();
-      ctx.arc(cx, cy, radius - (qrW * 0.004), 0, Math.PI * 2);
-      ctx.lineWidth = qrW * 0.008;
-      ctx.strokeStyle = "rgba(0,0,0,0.18)";
+      ctx.arc(cx, cy, radius - borderWidth / 2, 0, Math.PI * 2);
+      ctx.lineWidth = borderWidth;
+      ctx.strokeStyle = `rgba(80,80,80,${borderOpacity})`;
       ctx.stroke();
       ctx.restore();
     }
 
-    // O logo é desenhado exatamente como está em logo.png.
+    // O logo original é apenas desenhado; não é redesenhado nem alterado.
     ctx.drawImage(logo, cx - logoW / 2, cy - logoH / 2, logoW, logoH);
   };
   logo.src = "logo.png";
 }
-
 function downloadQR() {
   generateQR();
   setTimeout(() => {
@@ -151,7 +145,6 @@ function downloadQR() {
     a.click();
   }, 300);
 }
-
 function populateReferences() {
   referenceSelect.innerHTML = "";
   config.congregations.forEach((name) => {
@@ -165,14 +158,34 @@ function populateReferences() {
   custom.textContent = "Outra...";
   referenceSelect.appendChild(custom);
 }
-
 function updateBankData() {
   document.getElementById("displayName").textContent = config.beneficiaryName;
   document.getElementById("displayIban").textContent = formatIban(config.iban);
   document.getElementById("displayBic").textContent = config.bic;
 }
+function formatIban(iban) {
+  return iban.replace(/\s+/g, "").replace(/(.{4})/g, "$1 ").trim();
+}
 
-function formatIban(iban) { return iban.replace(/\s+/g, "").replace(/(.{4})/g, "$1 ").trim(); }
+function setControl(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.value = value;
+  const range = document.getElementById(id + "Range");
+  if (range) range.value = value;
+}
+function getNumber(id, fallback) {
+  const value = Number(document.getElementById(id).value);
+  return Number.isFinite(value) ? value : fallback;
+}
+function bindRangePair(id, onChange) {
+  const number = document.getElementById(id);
+  const range = document.getElementById(id + "Range");
+  if (!number || !range) return;
+  const syncFromNumber = () => { range.value = number.value; onChange(); };
+  const syncFromRange = () => { number.value = range.value; onChange(); };
+  number.addEventListener("input", syncFromNumber);
+  range.addEventListener("input", syncFromRange);
+}
 
 function fillAdminForm() {
   document.getElementById("adminPassword").value = config.adminPassword;
@@ -180,29 +193,47 @@ function fillAdminForm() {
   document.getElementById("adminName").value = config.beneficiaryName;
   document.getElementById("adminIban").value = config.iban;
   document.getElementById("adminBic").value = config.bic;
-  document.getElementById("adminLogoPercent").value = config.logoPercent;
-  document.getElementById("adminCircleMarginPercent").value = config.circleMarginPercent || 160;
-  document.getElementById("adminLogoHighlightStyle").value = config.logoHighlightStyle || "shadow-border";
+  setControl("adminLogoPercent", config.logoPercent);
+  setControl("adminCircleMarginPercent", config.circleMarginPercent);
+  setControl("adminBorderWidth", config.borderWidth);
+  setControl("adminBorderOpacity", config.borderOpacity);
+  setControl("adminShadowOpacity", config.shadowOpacity);
+  setControl("adminShadowBlur", config.shadowBlur);
+  setControl("adminShadowOffset", config.shadowOffset);
   document.getElementById("adminCongregations").value = config.congregations.join("\n");
 }
-
+function readAdminVisualsOnly() {
+  config.logoPercent = Math.max(5, Math.min(25, getNumber("adminLogoPercent", 20)));
+  config.circleMarginPercent = Math.max(120, Math.min(220, getNumber("adminCircleMarginPercent", 160)));
+  config.borderWidth = Math.max(0, Math.min(18, getNumber("adminBorderWidth", 5)));
+  config.borderOpacity = Math.max(0, Math.min(100, getNumber("adminBorderOpacity", 18)));
+  config.shadowOpacity = Math.max(0, Math.min(100, getNumber("adminShadowOpacity", 22)));
+  config.shadowBlur = Math.max(0, Math.min(40, getNumber("adminShadowBlur", 18)));
+  config.shadowOffset = Math.max(0, Math.min(20, getNumber("adminShadowOffset", 6)));
+  generateQR();
+}
 function saveAdminForm() {
   config.adminPassword = document.getElementById("adminPassword").value.trim() || "CKD2025";
   config.referencePrefix = document.getElementById("adminPrefix").value.trim() || "CKD-";
   config.beneficiaryName = document.getElementById("adminName").value.trim();
   config.iban = document.getElementById("adminIban").value.replace(/\s+/g, "").trim();
   config.bic = document.getElementById("adminBic").value.replace(/\s+/g, "").trim();
-  config.logoPercent = Math.max(5, Math.min(25, Number(document.getElementById("adminLogoPercent").value || 20)));
-  config.circleMarginPercent = Math.max(120, Math.min(220, Number(document.getElementById("adminCircleMarginPercent").value || 140)));
-  config.logoHighlightStyle = document.getElementById("adminLogoHighlightStyle").value || "shadow-border";
-  config.congregations = document.getElementById("adminCongregations").value.split("\n").map(x => x.trim()).filter(Boolean);
+  readAdminVisualsOnly();
+  config.congregations = document.getElementById("adminCongregations").value
+    .split("\n").map(x => x.trim()).filter(Boolean);
 
   saveConfig();
   init();
   showAdmin();
-  setStatus("Configurações salvas neste navegador.");
+  toast("Configurações salvas.");
 }
-
+function resetConfig() {
+  localStorage.removeItem("ckdConfig");
+  config = cloneConfig(DEFAULT_CONFIG);
+  init();
+  fillAdminForm();
+  toast("Configurações restauradas.");
+}
 function exportConfig() {
   const js = "window.CKD_CONFIG = " + JSON.stringify(config, null, 2) + ";\n";
   const blob = new Blob([js], { type: "text/javascript" });
@@ -212,7 +243,6 @@ function exportConfig() {
   a.click();
   URL.revokeObjectURL(a.href);
 }
-
 function init() {
   populateReferences();
   updateBankData();
@@ -233,6 +263,14 @@ passwordInput.addEventListener("keydown", (e) => {
   if (e.key === "Escape") closeLogin();
 });
 document.getElementById("exitAdminBtn").addEventListener("click", showUser);
+document.querySelectorAll(".admTab").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".admTab").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".admContent").forEach(c => c.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById(btn.dataset.tab).classList.add("active");
+  });
+});
 referenceSelect.addEventListener("change", () => {
   customRefBox.classList.toggle("hidden", referenceSelect.value !== "__custom__");
   generateQR();
@@ -243,11 +281,15 @@ document.getElementById("downloadBtn").addEventListener("click", downloadQR);
 document.getElementById("saveAdminBtn").addEventListener("click", saveAdminForm);
 document.getElementById("resetAdminBtn").addEventListener("click", resetConfig);
 document.getElementById("exportConfigBtn").addEventListener("click", exportConfig);
+
+["adminLogoPercent","adminCircleMarginPercent","adminBorderWidth","adminBorderOpacity","adminShadowOpacity","adminShadowBlur","adminShadowOffset"]
+  .forEach(id => bindRangePair(id, readAdminVisualsOnly));
+
 document.querySelectorAll(".copy").forEach((btn) => {
   btn.addEventListener("click", async () => {
     const value = btn.dataset.copy === "iban" ? config.iban : config.bic;
     await navigator.clipboard.writeText(value);
-    setStatus("Copiado.");
+    toast("Copiado.");
   });
 });
 init();

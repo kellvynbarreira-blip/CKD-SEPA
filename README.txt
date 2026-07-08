@@ -1,24 +1,34 @@
-# CKD - Gerador SEPA / GiroCode v4
+# CKD SEPA GiroCode v5.0
 
-## Acesso ADM
-Clique 3 vezes no logo da CKD.
+## Acesso ao ADM
+Clique 5 vezes no logo CKD no canto superior esquerdo.
 
 Senha padrão:
 CKD2025
 
-## Novidades v4
-- Mantém o logo original sem redesenhar.
-- Controle no ADM para tamanho do logo.
-- Controle no ADM para tamanho do círculo branco, sem alterar o tamanho do logo.
-- Controle no ADM para destaque ao redor do logo:
-  - Sombra + borda suave
-  - Somente sombra
-  - Somente borda suave
-  - Sem destaque
+## Novidades
+- Logo CKD no canto superior esquerdo.
+- Área ADM por abas.
+- Controle separado de:
+  - tamanho do logo
+  - tamanho do círculo branco
+  - largura da borda cinza
+  - transparência da borda cinza
+  - intensidade da sombra
+  - desfoque da sombra
+  - distância da sombra
+- Pré-visualização em tempo real.
+- O logo original não é alterado.
 
-## Publicar no GitHub Pages
-1. Extraia o ZIP.
-2. No repositório CKD-SEPA, clique em Add file > Upload files.
-3. Envie todos os arquivos extraídos.
-4. Substitua os arquivos antigos.
-5. Clique em Commit changes.
+## Como atualizar no GitHub Pages
+1. Extraia este ZIP.
+2. Abra o repositório CKD-SEPA no GitHub.
+3. Clique em Add file > Upload files.
+4. Envie todos os arquivos extraídos.
+5. Substitua os arquivos antigos.
+6. Clique em Commit changes.
+7. Aguarde 1 a 3 minutos.
+
+## Observação
+O QR Code continua no formato EPC/SEPA/GiroCode.
+Teste no aplicativo bancário antes de imprimir em grande quantidade.

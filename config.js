@@ -6,7 +6,11 @@ window.CKD_CONFIG = {
   bic: "VBRSDE33XXX",
   logoPercent: 20,
   circleMarginPercent: 160,
-  logoHighlightStyle: "shadow-border",
+  borderWidth: 5,
+  borderOpacity: 18,
+  shadowOpacity: 22,
+  shadowBlur: 18,
+  shadowOffset: 6,
   congregations: [
     "Backnang",
     "Stuttgart",
