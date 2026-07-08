@@ -129,7 +129,7 @@ function generateQR() {
     const ratio = logoW / logo.width;
     const logoH = logo.height * ratio;
 
-    const circleD = Math.max(logoW, logoH) * 1.78;
+    const circleD = Math.max(logoW, logoH) * 1.60;
     const cx = qrW / 2;
     const cy = qrW / 2;
 
