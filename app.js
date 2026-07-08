@@ -105,7 +105,7 @@ function generateQR() {
     const logoW = qrW * (Number(config.logoPercent || 20) / 100);
     const ratio = logoW / logo.width;
     const logoH = logo.height * ratio;
-    const circleMultiplier = Number(config.circleMarginPercent || 160) / 100;
+    const circleMultiplier = Number(config.circleMarginPercent || 150) / 100;
     const circleD = Math.max(logoW, logoH) * circleMultiplier;
     const cx = qrW / 2;
     const cy = qrW / 2;
