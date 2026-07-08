@@ -10,15 +10,10 @@
   <main class="app">
     <section class="card">
       <header class="header">
-        <img src="logo.png" alt="CKD" class="logo">
+        <img src="logo.png" alt="CKD" class="logo" id="ckdLogo" title="CKD">
         <h1>Gerador SEPA / GiroCode</h1>
         <p>Crie QR Codes EPC/SEPA para doações. O valor fica em branco para o doador escolher no banco.</p>
       </header>
-
-      <nav class="tabs">
-        <button id="userTab" class="tab active" type="button">Usuário</button>
-        <button id="adminTab" class="tab" type="button">Administrador</button>
-      </nav>
 
       <section id="userPanel">
         <label for="referenceSelect">Congregação / referência</label>
@@ -49,9 +44,17 @@
       </section>
 
       <section id="adminPanel" class="hidden">
-        <div class="notice">
-          As configurações do administrador ficam salvas neste navegador. Para tornar mudanças permanentes no site publicado, edite o arquivo <code>config.js</code>.
+        <div class="adminTop">
+          <h2>ADM</h2>
+          <button id="exitAdminBtn" type="button">Sair do ADM</button>
         </div>
+
+        <div class="notice">
+          As configurações do ADM ficam salvas neste navegador. Para tornar mudanças permanentes no site publicado, use <strong>Exportar config.js</strong> e substitua o arquivo no GitHub.
+        </div>
+
+        <label for="adminPassword">Senha do ADM</label>
+        <input id="adminPassword" type="text">
 
         <label for="adminPrefix">Prefixo da referência</label>
         <input id="adminPrefix" type="text">
@@ -76,10 +79,6 @@
           <button id="resetAdminBtn" type="button">Restaurar padrão</button>
           <button id="exportConfigBtn" type="button">Exportar config.js</button>
         </div>
-
-        <p class="small">
-          Dica: para publicar uma configuração permanente, baixe o arquivo config.js exportado e substitua o config.js no GitHub/Netlify.
-        </p>
       </section>
 
       <footer>
@@ -88,6 +87,19 @@
       </footer>
     </section>
   </main>
+
+  <div id="loginModal" class="modal hidden">
+    <div class="modalCard">
+      <h2>Área ADM</h2>
+      <p>Digite a senha para acessar as configurações.</p>
+      <input id="passwordInput" type="password" placeholder="Senha">
+      <div class="buttonRow">
+        <button id="loginBtn" type="button" class="primary">Entrar</button>
+        <button id="cancelLoginBtn" type="button">Cancelar</button>
+      </div>
+      <p id="loginError" class="error hidden">Senha incorreta.</p>
+    </div>
+  </div>
 
   <script src="config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>

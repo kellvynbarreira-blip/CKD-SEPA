@@ -1,4 +1,5 @@
 window.CKD_CONFIG = {
+  adminPassword: "CKD2025",
   referencePrefix: "CKD-",
   beneficiaryName: "CHRISTLICHE KONGREGATION IN DEUTSCH.",
   iban: "DE05340600940000734509",

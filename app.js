@@ -1,9 +1,6 @@
 const DEFAULT_CONFIG = window.CKD_CONFIG;
-
 let config = loadConfig();
 
-const userTab = document.getElementById("userTab");
-const adminTab = document.getElementById("adminTab");
 const userPanel = document.getElementById("userPanel");
 const adminPanel = document.getElementById("adminPanel");
 const referenceSelect = document.getElementById("referenceSelect");
@@ -12,14 +9,24 @@ const customRef = document.getElementById("customRef");
 const finalReference = document.getElementById("finalReference");
 const qrCanvas = document.getElementById("qrCanvas");
 const statusEl = document.getElementById("status");
+const loginModal = document.getElementById("loginModal");
+const passwordInput = document.getElementById("passwordInput");
+const loginError = document.getElementById("loginError");
+
+let logoClicks = 0;
+let logoClickTimer = null;
+
+function cloneConfig(obj) {
+  return JSON.parse(JSON.stringify(obj));
+}
 
 function loadConfig() {
   const saved = localStorage.getItem("ckdConfig");
-  if (!saved) return structuredClone(DEFAULT_CONFIG);
+  if (!saved) return cloneConfig(DEFAULT_CONFIG);
   try {
-    return { ...structuredClone(DEFAULT_CONFIG), ...JSON.parse(saved) };
+    return { ...cloneConfig(DEFAULT_CONFIG), ...JSON.parse(saved) };
   } catch {
-    return structuredClone(DEFAULT_CONFIG);
+    return cloneConfig(DEFAULT_CONFIG);
   }
 }
 
@@ -29,8 +36,9 @@ function saveConfig() {
 
 function resetConfig() {
   localStorage.removeItem("ckdConfig");
-  config = structuredClone(DEFAULT_CONFIG);
+  config = cloneConfig(DEFAULT_CONFIG);
   init();
+  showUser();
   setStatus("Configurações restauradas.");
 }
 
@@ -41,13 +49,37 @@ function setStatus(message) {
   }, 2500);
 }
 
-function switchTab(tab) {
-  const admin = tab === "admin";
-  adminTab.classList.toggle("active", admin);
-  userTab.classList.toggle("active", !admin);
-  adminPanel.classList.toggle("hidden", !admin);
-  userPanel.classList.toggle("hidden", admin);
-  if (admin) fillAdminForm();
+function openLogin() {
+  loginModal.classList.remove("hidden");
+  passwordInput.value = "";
+  loginError.classList.add("hidden");
+  setTimeout(() => passwordInput.focus(), 50);
+}
+
+function closeLogin() {
+  loginModal.classList.add("hidden");
+}
+
+function tryLogin() {
+  if (passwordInput.value === config.adminPassword) {
+    closeLogin();
+    showAdmin();
+  } else {
+    loginError.classList.remove("hidden");
+  }
+}
+
+function showAdmin() {
+  userPanel.classList.add("hidden");
+  adminPanel.classList.remove("hidden");
+  fillAdminForm();
+  setStatus("ADM aberto.");
+}
+
+function showUser() {
+  adminPanel.classList.add("hidden");
+  userPanel.classList.remove("hidden");
+  generateQR();
 }
 
 function buildReference() {
@@ -150,6 +182,7 @@ function formatIban(iban) {
 }
 
 function fillAdminForm() {
+  document.getElementById("adminPassword").value = config.adminPassword;
   document.getElementById("adminPrefix").value = config.referencePrefix;
   document.getElementById("adminName").value = config.beneficiaryName;
   document.getElementById("adminIban").value = config.iban;
@@ -159,6 +192,7 @@ function fillAdminForm() {
 }
 
 function saveAdminForm() {
+  config.adminPassword = document.getElementById("adminPassword").value.trim() || "CKD2025";
   config.referencePrefix = document.getElementById("adminPrefix").value.trim() || "CKD-";
   config.beneficiaryName = document.getElementById("adminName").value.trim();
   config.iban = document.getElementById("adminIban").value.replace(/\s+/g, "").trim();
@@ -171,7 +205,7 @@ function saveAdminForm() {
 
   saveConfig();
   init();
-  switchTab("admin");
+  showAdmin();
   setStatus("Configurações salvas neste navegador.");
 }
 
@@ -192,8 +226,24 @@ function init() {
   generateQR();
 }
 
-userTab.addEventListener("click", () => switchTab("user"));
-adminTab.addEventListener("click", () => switchTab("admin"));
+document.getElementById("ckdLogo").addEventListener("click", () => {
+  logoClicks += 1;
+  clearTimeout(logoClickTimer);
+  logoClickTimer = setTimeout(() => logoClicks = 0, 1400);
+  if (logoClicks >= 5) {
+    logoClicks = 0;
+    openLogin();
+  }
+});
+
+document.getElementById("loginBtn").addEventListener("click", tryLogin);
+document.getElementById("cancelLoginBtn").addEventListener("click", closeLogin);
+passwordInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") tryLogin();
+  if (e.key === "Escape") closeLogin();
+});
+
+document.getElementById("exitAdminBtn").addEventListener("click", showUser);
 referenceSelect.addEventListener("change", () => {
   customRefBox.classList.toggle("hidden", referenceSelect.value !== "__custom__");
   generateQR();
