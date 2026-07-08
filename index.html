@@ -3,158 +3,189 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CKD SEPA GiroCode</title>
+  <title>CKD - Gerador SEPA GiroCode</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header class="topbar">
-    <div class="brand">
-      <img src="logo.png" alt="CKD" id="ckdLogo" class="brandLogo">
-      <div>
-        <strong>CKD SEPA GiroCode</strong>
-        <span>Gerador EPC/SEPA</span>
-      </div>
-    </div>
-  </header>
+  <main class="app">
+    <section class="card">
+      <header class="header">
+        <img src="logo.png" alt="CKD" class="logo" id="ckdLogo" title="CKD">
+        <h1>Gerador SEPA / GiroCode</h1>
+        <p>Crie QR Codes EPC/SEPA para doações. O valor fica em branco para o doador escolher no banco.</p>
+      </header>
 
-  <main class="layout">
-    <section id="userPanel" class="panel userPanel">
-      <div class="panelHead">
-        <h1>Gerar QR Code SEPA</h1>
-        <p>Selecione ou digite a referência. O valor fica em branco para o doador escolher no aplicativo bancário.</p>
-      </div>
+      <section id="userPanel">
+        <label for="referenceSelect">Congregação / referência</label>
+        <select id="referenceSelect"></select>
 
-      <label for="referenceSelect">Congregação / referência</label>
-      <select id="referenceSelect"></select>
-
-      <div id="customRefBox" class="hidden">
-        <label for="customRef">Outra referência</label>
-        <input id="customRef" type="text" placeholder="Exemplo: Nürnberg">
-      </div>
-
-      <p class="finalRef">Referência final: <strong id="finalReference"></strong></p>
-
-      <div class="actions">
-        <button id="generateBtn" type="button">Gerar QR</button>
-        <button id="downloadBtn" type="button" class="primary">Baixar PNG</button>
-      </div>
-
-      <div class="qrWrap">
-        <canvas id="qrCanvas" width="1400" height="1400"></canvas>
-      </div>
-
-      <div class="bankBox">
-        <h2>Dados bancários</h2>
-        <p><strong>Beneficiário:</strong> <span id="displayName"></span></p>
-        <p><strong>IBAN:</strong> <span id="displayIban"></span> <button class="mini copy" data-copy="iban">Copiar</button></p>
-        <p><strong>BIC:</strong> <span id="displayBic"></span> <button class="mini copy" data-copy="bic">Copiar</button></p>
-      </div>
-    </section>
-
-    <section id="adminPanel" class="panel adminPanel hidden">
-      <div class="adminHeader">
-        <div>
-          <h1>ADM</h1>
-          <p>Configurações internas do gerador CKD SEPA.</p>
-        </div>
-        <button id="exitAdminBtn" type="button">Sair</button>
-      </div>
-
-      <nav class="adminTabs">
-        <button class="admTab active" data-tab="bankTab">Banco</button>
-        <button class="admTab" data-tab="congregationsTab">Congregações</button>
-        <button class="admTab" data-tab="qrTab">QR Code</button>
-        <button class="admTab" data-tab="securityTab">Senha</button>
-        <button class="admTab" data-tab="backupTab">Backup</button>
-      </nav>
-
-      <div id="bankTab" class="admContent active">
-        <label for="adminName">Nome do beneficiário</label>
-        <input id="adminName" type="text">
-
-        <label for="adminIban">IBAN</label>
-        <input id="adminIban" type="text">
-
-        <label for="adminBic">BIC</label>
-        <input id="adminBic" type="text">
-
-        <label for="adminPrefix">Prefixo da referência</label>
-        <input id="adminPrefix" type="text">
-      </div>
-
-      <div id="congregationsTab" class="admContent">
-        <label for="adminCongregations">Lista de congregações / referências</label>
-        <textarea id="adminCongregations" rows="10"></textarea>
-      </div>
-
-      <div id="qrTab" class="admContent">
-        <div class="sliderGrid">
-          <div class="sliderRow">
-            <label>Tamanho do logo (%)</label>
-            <input id="adminLogoPercentRange" type="range" min="5" max="25" step="1">
-            <input id="adminLogoPercent" type="number" min="5" max="25" step="1">
-          </div>
-
-          <div class="sliderRow">
-            <label>Tamanho do círculo branco (%)</label>
-            <input id="adminCircleMarginPercentRange" type="range" min="120" max="220" step="5">
-            <input id="adminCircleMarginPercent" type="number" min="120" max="220" step="5">
-          </div>
-
-          <div class="sliderRow">
-            <label>Espessura da borda cinza (px)</label>
-            <input id="adminBorderWidthRange" type="range" min="0" max="18" step="1">
-            <input id="adminBorderWidth" type="number" min="0" max="18" step="1">
-          </div>
-
-          <div class="sliderRow">
-            <label>Transparência da borda (%)</label>
-            <input id="adminBorderOpacityRange" type="range" min="0" max="100" step="5">
-            <input id="adminBorderOpacity" type="number" min="0" max="100" step="5">
-          </div>
-
-          <div class="sliderRow">
-            <label>Intensidade da sombra (%)</label>
-            <input id="adminShadowOpacityRange" type="range" min="0" max="100" step="5">
-            <input id="adminShadowOpacity" type="number" min="0" max="100" step="5">
-          </div>
-
-          <div class="sliderRow">
-            <label>Desfoque da sombra (px)</label>
-            <input id="adminShadowBlurRange" type="range" min="0" max="40" step="1">
-            <input id="adminShadowBlur" type="number" min="0" max="40" step="1">
-          </div>
-
-          <div class="sliderRow">
-            <label>Distância da sombra (px)</label>
-            <input id="adminShadowOffsetRange" type="range" min="0" max="20" step="1">
-            <input id="adminShadowOffset" type="number" min="0" max="20" step="1">
-          </div>
+        <div id="customRefBox" class="hidden">
+          <label for="customRef">Outra referência</label>
+          <input id="customRef" type="text" placeholder="Exemplo: Nürnberg">
         </div>
 
-        <div class="previewNote">
-          A pré-visualização é atualizada automaticamente. O logo original não é alterado.
-        </div>
-      </div>
+        <p class="final-ref">Referência final: <strong id="finalReference"></strong></p>
 
-      <div id="securityTab" class="admContent">
-        <label for="adminPassword">Senha do ADM</label>
-        <input id="adminPassword" type="text">
-      </div>
-
-      <div id="backupTab" class="admContent">
-        <div class="notice">
-          <strong>Importante:</strong> salvar configurações grava apenas neste navegador. Para deixar permanente no GitHub, clique em <strong>Exportar config.js</strong> e substitua o arquivo no repositório.
+        <div class="buttonRow">
+          <button id="generateBtn" type="button">Gerar QR</button>
+          <button id="downloadBtn" type="button" class="primary">Baixar PNG</button>
         </div>
-        <div class="actions">
-          <button id="exportConfigBtn" type="button">Exportar config.js</button>
-          <button id="resetAdminBtn" type="button">Restaurar padrão</button>
-        </div>
-      </div>
 
-      <div class="actions stickyActions">
-        <button id="saveAdminBtn" type="button" class="primary">Salvar configurações</button>
-      </div>
+        <div class="qrBox">
+          <canvas id="qrCanvas" width="1400" height="1400"></canvas>
+        </div>
+
+        <section class="bankData">
+          <h2>Dados bancários</h2>
+          <p><strong>Beneficiário:</strong> <span id="displayName"></span></p>
+          <p><strong>IBAN:</strong> <span id="displayIban"></span> <button class="copy" data-copy="iban">Copiar</button></p>
+          <p><strong>BIC:</strong> <span id="displayBic"></span> <button class="copy" data-copy="bic">Copiar</button></p>
+        </section>
+      </section>
+
+      <section id="adminPanel" class="hidden">
+        <div class="adminTop">
+          <h2>ADM</h2>
+          <button id="exitAdminBtn" type="button">Sair do ADM</button>
+        </div>
+
+        <div class="adminTabs">
+          <button class="adminTab active" data-tab="bankTab" type="button">Banco</button>
+          <button class="adminTab" data-tab="qrTab" type="button">QR Code</button>
+          <button class="adminTab" data-tab="congregationsTab" type="button">Congregações</button>
+          <button class="adminTab" data-tab="securityTab" type="button">Segurança</button>
+          <button class="adminTab" data-tab="backupTab" type="button">Backup</button>
+        </div>
+
+        <div id="bankTab" class="tabPanel active">
+          <div class="notice">
+            Dados usados no QR EPC/SEPA. Altere com cuidado e teste no aplicativo bancário.
+          </div>
+
+          <label for="adminPrefix">Prefixo da referência</label>
+          <input id="adminPrefix" type="text">
+
+          <label for="adminName">Nome do beneficiário</label>
+          <input id="adminName" type="text">
+
+          <label for="adminIban">IBAN</label>
+          <input id="adminIban" type="text">
+
+          <label for="adminBic">BIC</label>
+          <input id="adminBic" type="text">
+        </div>
+
+        <div id="qrTab" class="tabPanel">
+          <div class="notice">
+            Ajuste abaixo sem medo: primeiro veja na pré-visualização. Depois use <strong>Aplicar</strong> ou <strong>Salvar</strong>.
+          </div>
+
+          <div class="qrAdminGrid">
+            <div class="qrControls">
+              <div class="controlRow">
+                <label>Tamanho do logo (%) <small>recomendado: 18–22</small></label>
+                <div class="rangePair">
+                  <input id="previewLogoPercentRange" type="range" min="5" max="25" step="1">
+                  <input id="previewLogoPercent" type="number" min="5" max="25" step="1">
+                </div>
+              </div>
+
+              <div class="controlRow">
+                <label>Tamanho do círculo branco (%) <small>recomendado: 145–170</small></label>
+                <div class="rangePair">
+                  <input id="previewCircleMarginPercentRange" type="range" min="120" max="220" step="5">
+                  <input id="previewCircleMarginPercent" type="number" min="120" max="220" step="5">
+                </div>
+              </div>
+
+              <div class="controlRow">
+                <label>Espessura da borda cinza (px) <small>recomendado: 2–6</small></label>
+                <div class="rangePair">
+                  <input id="previewBorderWidthRange" type="range" min="0" max="18" step="1">
+                  <input id="previewBorderWidth" type="number" min="0" max="18" step="1">
+                </div>
+              </div>
+
+              <div class="controlRow">
+                <label>Transparência da borda (%) <small>menor = mais discreta</small></label>
+                <div class="rangePair">
+                  <input id="previewBorderOpacityRange" type="range" min="0" max="100" step="5">
+                  <input id="previewBorderOpacity" type="number" min="0" max="100" step="5">
+                </div>
+              </div>
+
+              <div class="controlRow">
+                <label>Intensidade da sombra (%)</label>
+                <div class="rangePair">
+                  <input id="previewShadowOpacityRange" type="range" min="0" max="100" step="5">
+                  <input id="previewShadowOpacity" type="number" min="0" max="100" step="5">
+                </div>
+              </div>
+
+              <div class="controlRow">
+                <label>Desfoque da sombra (px)</label>
+                <div class="rangePair">
+                  <input id="previewShadowBlurRange" type="range" min="0" max="40" step="1">
+                  <input id="previewShadowBlur" type="number" min="0" max="40" step="1">
+                </div>
+              </div>
+
+              <div class="controlRow">
+                <label>Distância da sombra (px)</label>
+                <div class="rangePair">
+                  <input id="previewShadowOffsetRange" type="range" min="0" max="20" step="1">
+                  <input id="previewShadowOffset" type="number" min="0" max="20" step="1">
+                </div>
+              </div>
+            </div>
+
+            <div class="qrPreview">
+              <h3>Pré-visualização</h3>
+              <canvas id="previewCanvas" width="900" height="900"></canvas>
+              <p class="small">Esta prévia não altera o QR principal até você clicar em Aplicar ou Salvar.</p>
+              <div class="buttonRow previewButtons">
+                <button id="cancelPreviewBtn" type="button">Cancelar</button>
+                <button id="applyPreviewBtn" type="button">Aplicar</button>
+                <button id="saveFromPreviewBtn" type="button" class="primary">Salvar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="congregationsTab" class="tabPanel">
+          <label for="adminCongregations">Lista de referências/congregações, uma por linha</label>
+          <textarea id="adminCongregations" rows="9"></textarea>
+        </div>
+
+        <div id="securityTab" class="tabPanel">
+          <label for="adminPassword">Senha do ADM</label>
+          <input id="adminPassword" type="text">
+          <p class="small">Como o site é estático no GitHub Pages, esta é uma proteção interna leve.</p>
+        </div>
+
+        <div id="backupTab" class="tabPanel">
+          <div class="notice">
+            Para tornar as mudanças permanentes no GitHub, exporte o <strong>config.js</strong> e substitua o arquivo no repositório.
+          </div>
+
+          <label for="importConfigFile">Importar config.js</label>
+          <input id="importConfigFile" type="file" accept=".js,.txt">
+
+          <div class="buttonRow">
+            <button id="exportConfigBtn" type="button">Exportar config.js</button>
+            <button id="resetAdminBtn" type="button">Restaurar padrão</button>
+          </div>
+        </div>
+
+        <div class="buttonRow adminSaveRow">
+          <button id="saveAdminBtn" type="button" class="primary">Salvar configurações</button>
+        </div>
+      </section>
+
+      <footer>
+        <p id="status"></p>
+        <p class="small">Formato EPC/SEPA/GiroCode. Teste no aplicativo bancário antes de imprimir em grande quantidade.</p>
+      </footer>
     </section>
   </main>
 
@@ -163,15 +194,13 @@
       <h2>Área ADM</h2>
       <p>Digite a senha para acessar as configurações.</p>
       <input id="passwordInput" type="password" placeholder="Senha">
-      <div class="actions">
+      <div class="buttonRow">
         <button id="loginBtn" type="button" class="primary">Entrar</button>
         <button id="cancelLoginBtn" type="button">Cancelar</button>
       </div>
       <p id="loginError" class="error hidden">Senha incorreta.</p>
     </div>
   </div>
-
-  <div id="toast"></div>
 
   <script src="config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>

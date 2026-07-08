@@ -6,7 +6,7 @@ window.CKD_CONFIG = {
   bic: "VBRSDE33XXX",
   logoPercent: 20,
   circleMarginPercent: 160,
-  borderWidth: 5,
+  borderWidth: 4,
   borderOpacity: 18,
   shadowOpacity: 22,
   shadowBlur: 18,
