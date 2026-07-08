@@ -1,6 +1,6 @@
 # CKD - Gerador SEPA / GiroCode v2
 
-Este projeto cria QR Codes EPC/SEPA/GiroCode para doações da CKD.
+Este projeto cria QR Codes EPC/SEPA/GiroCode para oferta de coleta da CKD.
 
 ## Modos
 
