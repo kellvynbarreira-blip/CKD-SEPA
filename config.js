@@ -5,6 +5,8 @@ window.CKD_CONFIG = {
   iban: "DE05340600940000734509",
   bic: "VBRSDE33XXX",
   logoPercent: 20,
+  circleMarginPercent: 160,
+  logoHighlightStyle: "shadow-border",
   congregations: [
     "Backnang",
     "Stuttgart",

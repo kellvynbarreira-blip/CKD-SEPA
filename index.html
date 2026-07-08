@@ -12,7 +12,7 @@
       <header class="header">
         <img src="logo.png" alt="CKD" class="logo" id="ckdLogo" title="CKD">
         <h1>Gerador SEPA / GiroCode</h1>
-        <p>Crie QR Codes EPC/SEPA.</p>
+        <p>Crie QR Codes EPC/SEPA para doações. O valor fica em branco para o doador escolher no banco.</p>
       </header>
 
       <section id="userPanel">
@@ -70,6 +70,17 @@
 
         <label for="adminLogoPercent">Tamanho do logo no QR (%)</label>
         <input id="adminLogoPercent" type="number" min="5" max="25" step="1">
+
+        <label for="adminCircleMarginPercent">Tamanho do círculo branco (%)</label>
+        <input id="adminCircleMarginPercent" type="number" min="120" max="220" step="5">
+
+        <label for="adminLogoHighlightStyle">Destaque ao redor do logo</label>
+        <select id="adminLogoHighlightStyle">
+          <option value="shadow-border">Sombra + borda suave</option>
+          <option value="shadow">Somente sombra</option>
+          <option value="border">Somente borda suave</option>
+          <option value="none">Sem destaque</option>
+        </select>
 
         <label for="adminCongregations">Lista de referências/congregações, uma por linha</label>
         <textarea id="adminCongregations" rows="8"></textarea>

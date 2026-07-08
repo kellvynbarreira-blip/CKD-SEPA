@@ -16,23 +16,16 @@ const loginError = document.getElementById("loginError");
 let logoClicks = 0;
 let logoClickTimer = null;
 
-function cloneConfig(obj) {
-  return JSON.parse(JSON.stringify(obj));
-}
+function cloneConfig(obj) { return JSON.parse(JSON.stringify(obj)); }
 
 function loadConfig() {
   const saved = localStorage.getItem("ckdConfig");
   if (!saved) return cloneConfig(DEFAULT_CONFIG);
-  try {
-    return { ...cloneConfig(DEFAULT_CONFIG), ...JSON.parse(saved) };
-  } catch {
-    return cloneConfig(DEFAULT_CONFIG);
-  }
+  try { return { ...cloneConfig(DEFAULT_CONFIG), ...JSON.parse(saved) }; }
+  catch { return cloneConfig(DEFAULT_CONFIG); }
 }
 
-function saveConfig() {
-  localStorage.setItem("ckdConfig", JSON.stringify(config));
-}
+function saveConfig() { localStorage.setItem("ckdConfig", JSON.stringify(config)); }
 
 function resetConfig() {
   localStorage.removeItem("ckdConfig");
@@ -44,9 +37,7 @@ function resetConfig() {
 
 function setStatus(message) {
   statusEl.textContent = message;
-  setTimeout(() => {
-    if (statusEl.textContent === message) statusEl.textContent = "";
-  }, 2500);
+  setTimeout(() => { if (statusEl.textContent === message) statusEl.textContent = ""; }, 2500);
 }
 
 function openLogin() {
@@ -56,17 +47,11 @@ function openLogin() {
   setTimeout(() => passwordInput.focus(), 50);
 }
 
-function closeLogin() {
-  loginModal.classList.add("hidden");
-}
+function closeLogin() { loginModal.classList.add("hidden"); }
 
 function tryLogin() {
-  if (passwordInput.value === config.adminPassword) {
-    closeLogin();
-    showAdmin();
-  } else {
-    loginError.classList.remove("hidden");
-  }
+  if (passwordInput.value === config.adminPassword) { closeLogin(); showAdmin(); }
+  else loginError.classList.remove("hidden");
 }
 
 function showAdmin() {
@@ -92,20 +77,12 @@ function buildReference() {
 function makePayload() {
   const ref = buildReference();
   finalReference.textContent = ref;
-
   return [
-    "BCD",
-    "002",
-    "1",
-    "SCT",
+    "BCD","002","1","SCT",
     config.bic.replace(/\s+/g, ""),
     config.beneficiaryName,
     config.iban.replace(/\s+/g, ""),
-    "",
-    "",
-    "",
-    ref,
-    ""
+    "","","",ref,""
   ].join("\n");
 }
 
@@ -128,18 +105,37 @@ function generateQR() {
     const logoW = qrW * (Number(config.logoPercent || 20) / 100);
     const ratio = logoW / logo.width;
     const logoH = logo.height * ratio;
-
-    const circleD = Math.max(logoW, logoH) * 1.30;
+    const circleMultiplier = Number(config.circleMarginPercent || 160) / 100;
+    const circleD = Math.max(logoW, logoH) * circleMultiplier;
     const cx = qrW / 2;
     const cy = qrW / 2;
+    const radius = circleD / 2;
+    const highlight = config.logoHighlightStyle || "shadow-border";
 
     ctx.save();
+    if (highlight === "shadow" || highlight === "shadow-border") {
+      ctx.shadowColor = "rgba(0,0,0,0.28)";
+      ctx.shadowBlur = qrW * 0.018;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = qrW * 0.006;
+    }
     ctx.beginPath();
-    ctx.arc(cx, cy, circleD / 2, 0, Math.PI * 2);
+    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
     ctx.fillStyle = "white";
     ctx.fill();
     ctx.restore();
 
+    if (highlight === "border" || highlight === "shadow-border") {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius - (qrW * 0.004), 0, Math.PI * 2);
+      ctx.lineWidth = qrW * 0.008;
+      ctx.strokeStyle = "rgba(0,0,0,0.18)";
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // O logo é desenhado exatamente como está em logo.png.
     ctx.drawImage(logo, cx - logoW / 2, cy - logoH / 2, logoW, logoH);
   };
   logo.src = "logo.png";
@@ -164,7 +160,6 @@ function populateReferences() {
     option.textContent = name;
     referenceSelect.appendChild(option);
   });
-
   const custom = document.createElement("option");
   custom.value = "__custom__";
   custom.textContent = "Outra...";
@@ -177,9 +172,7 @@ function updateBankData() {
   document.getElementById("displayBic").textContent = config.bic;
 }
 
-function formatIban(iban) {
-  return iban.replace(/\s+/g, "").replace(/(.{4})/g, "$1 ").trim();
-}
+function formatIban(iban) { return iban.replace(/\s+/g, "").replace(/(.{4})/g, "$1 ").trim(); }
 
 function fillAdminForm() {
   document.getElementById("adminPassword").value = config.adminPassword;
@@ -188,6 +181,8 @@ function fillAdminForm() {
   document.getElementById("adminIban").value = config.iban;
   document.getElementById("adminBic").value = config.bic;
   document.getElementById("adminLogoPercent").value = config.logoPercent;
+  document.getElementById("adminCircleMarginPercent").value = config.circleMarginPercent || 160;
+  document.getElementById("adminLogoHighlightStyle").value = config.logoHighlightStyle || "shadow-border";
   document.getElementById("adminCongregations").value = config.congregations.join("\n");
 }
 
@@ -198,10 +193,9 @@ function saveAdminForm() {
   config.iban = document.getElementById("adminIban").value.replace(/\s+/g, "").trim();
   config.bic = document.getElementById("adminBic").value.replace(/\s+/g, "").trim();
   config.logoPercent = Math.max(5, Math.min(25, Number(document.getElementById("adminLogoPercent").value || 20)));
-  config.congregations = document.getElementById("adminCongregations").value
-    .split("\n")
-    .map(x => x.trim())
-    .filter(Boolean);
+  config.circleMarginPercent = Math.max(120, Math.min(220, Number(document.getElementById("adminCircleMarginPercent").value || 160)));
+  config.logoHighlightStyle = document.getElementById("adminLogoHighlightStyle").value || "shadow-border";
+  config.congregations = document.getElementById("adminCongregations").value.split("\n").map(x => x.trim()).filter(Boolean);
 
   saveConfig();
   init();
@@ -230,19 +224,14 @@ document.getElementById("ckdLogo").addEventListener("click", () => {
   logoClicks += 1;
   clearTimeout(logoClickTimer);
   logoClickTimer = setTimeout(() => logoClicks = 0, 1400);
-  if (logoClicks >= 5) {
-    logoClicks = 0;
-    openLogin();
-  }
+  if (logoClicks >= 5) { logoClicks = 0; openLogin(); }
 });
-
 document.getElementById("loginBtn").addEventListener("click", tryLogin);
 document.getElementById("cancelLoginBtn").addEventListener("click", closeLogin);
 passwordInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter") tryLogin();
   if (e.key === "Escape") closeLogin();
 });
-
 document.getElementById("exitAdminBtn").addEventListener("click", showUser);
 referenceSelect.addEventListener("change", () => {
   customRefBox.classList.toggle("hidden", referenceSelect.value !== "__custom__");
@@ -254,7 +243,6 @@ document.getElementById("downloadBtn").addEventListener("click", downloadQR);
 document.getElementById("saveAdminBtn").addEventListener("click", saveAdminForm);
 document.getElementById("resetAdminBtn").addEventListener("click", resetConfig);
 document.getElementById("exportConfigBtn").addEventListener("click", exportConfig);
-
 document.querySelectorAll(".copy").forEach((btn) => {
   btn.addEventListener("click", async () => {
     const value = btn.dataset.copy === "iban" ? config.iban : config.bic;
@@ -262,5 +250,4 @@ document.querySelectorAll(".copy").forEach((btn) => {
     setStatus("Copiado.");
   });
 });
-
 init();

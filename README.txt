@@ -1,30 +1,24 @@
-# CKD - Gerador SEPA / GiroCode v3
+# CKD - Gerador SEPA / GiroCode v4
 
-## Novidades
-- Área pública simples para usuário.
-- Área ADM oculta.
-- Para abrir o ADM, clique 5 vezes no logo da CKD.
-- Senha padrão: CKD2025
-- Dentro do ADM é possível alterar a senha.
+## Acesso ADM
+Clique 5 vezes no logo da CKD.
+
+Senha padrão:
+CKD2025
+
+## Novidades v4
+- Mantém o logo original sem redesenhar.
+- Controle no ADM para tamanho do logo.
+- Controle no ADM para tamanho do círculo branco, sem alterar o tamanho do logo.
+- Controle no ADM para destaque ao redor do logo:
+  - Sombra + borda suave
+  - Somente sombra
+  - Somente borda suave
+  - Sem destaque
 
 ## Publicar no GitHub Pages
-
-1. Extraia este ZIP.
-2. Abra seu repositório CKD-SEPA no GitHub.
-3. Clique em Add file > Upload files.
-4. Envie todos os arquivos extraídos:
-   - index.html
-   - style.css
-   - app.js
-   - config.js
-   - logo.png
-   - README.txt
-5. Substitua os arquivos antigos.
-6. Clique em Commit changes.
-7. Aguarde 1 a 3 minutos.
-8. Abra seu site publicado.
-
-## Importante sobre a senha
-
-Como o GitHub Pages é um site estático, a senha é uma proteção interna leve.
-Ela evita acesso casual à área ADM, mas não é uma proteção criptográfica contra pessoas técnicas.
+1. Extraia o ZIP.
+2. No repositório CKD-SEPA, clique em Add file > Upload files.
+3. Envie todos os arquivos extraídos.
+4. Substitua os arquivos antigos.
+5. Clique em Commit changes.
