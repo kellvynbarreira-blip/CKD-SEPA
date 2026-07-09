@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CKD SEPA GiroCode</title>
+<title>CKD SEPA GiroCode v6</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#f4f1ea;font-family:Arial,Helvetica,sans-serif;color:#171717}
@@ -39,7 +39,7 @@ canvas{width:min(100%,520px);height:auto;background:#fff;border-radius:12px}
 .rangePair{display:grid;grid-template-columns:1fr 80px;gap:10px;align-items:center}
 input[type=range]{padding:0}
 .previewBox{background:#f7f7f7;border:1px solid #ddd;border-radius:16px;padding:16px;text-align:center;position:sticky;top:12px}
-#previewCanvas{width:min(100%,330px)}
+#previewCanvas,#plateQrPreviewCanvas{width:min(100%,330px)}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.46);display:flex;align-items:center;justify-content:center;padding:18px;z-index:999}
 .modalCard{width:min(100%,420px);background:#fff;border-radius:20px;padding:24px;box-shadow:0 18px 60px rgba(0,0,0,.25)}
 .error{color:#b00020;font-weight:700}
@@ -116,6 +116,7 @@ input[type=range]{padding:0}
 <button type="button" class="admTab active" data-admin="admBank">Banco</button>
 <button type="button" class="admTab" data-admin="admQr">QR Code</button>
 <button type="button" class="admTab" data-admin="admPlates">Placas</button>
+<button type="button" class="admTab" data-admin="admPlateQr">QR da Placa</button>
 <button type="button" class="admTab" data-admin="admCong">Congregações</button>
 <button type="button" class="admTab" data-admin="admSec">Segurança</button>
 </div>
@@ -153,6 +154,22 @@ input[type=range]{padding:0}
 <label>Bênção em alemão</label><input id="blessDe">
 <label>Bênção em português</label><input id="blessPt">
 <div class="controlRow"><label>Tamanho do QR na placa (%)</label><div class="rangePair"><input id="plateQrPercentRange" type="range" min="35" max="65" step="1"><input id="plateQrPercent" type="number" min="35" max="65" step="1"></div></div>
+</div>
+
+<div id="admPlateQr" class="admPane">
+<div class="notice">Ajuste aqui somente o QR Code que aparece dentro das placas A5/A4.</div>
+<div class="grid2">
+<div>
+<div class="controlRow"><label>Logo no QR da placa (%)</label><div class="rangePair"><input id="plateLogoPercentRange" type="range" min="5" max="25" step="1"><input id="plateLogoPercent" type="number" min="5" max="25" step="1"></div></div>
+<div class="controlRow"><label>Círculo branco no QR da placa (%)</label><div class="rangePair"><input id="plateCirclePercentRange" type="range" min="120" max="220" step="5"><input id="plateCirclePercent" type="number" min="120" max="220" step="5"></div></div>
+<div class="controlRow"><label>Contorno cinza no QR da placa (px)</label><div class="rangePair"><input id="plateBorderWidthRange" type="range" min="0" max="18" step="1"><input id="plateBorderWidth" type="number" min="0" max="18" step="1"></div></div>
+<div class="controlRow"><label>Transparência do contorno (%)</label><div class="rangePair"><input id="plateBorderOpacityRange" type="range" min="0" max="100" step="5"><input id="plateBorderOpacity" type="number" min="0" max="100" step="5"></div></div>
+<div class="controlRow"><label>Sombra no QR da placa (%)</label><div class="rangePair"><input id="plateShadowOpacityRange" type="range" min="0" max="100" step="5"><input id="plateShadowOpacity" type="number" min="0" max="100" step="5"></div></div>
+<div class="controlRow"><label>Desfoque da sombra</label><div class="rangePair"><input id="plateShadowBlurRange" type="range" min="0" max="40" step="1"><input id="plateShadowBlur" type="number" min="0" max="40" step="1"></div></div>
+<div class="controlRow"><label>Distância da sombra</label><div class="rangePair"><input id="plateShadowOffsetRange" type="range" min="0" max="20" step="1"><input id="plateShadowOffset" type="number" min="0" max="20" step="1"></div></div>
+</div>
+<div class="previewBox"><h3>Pré-visualização QR da Placa</h3><canvas id="plateQrPreviewCanvas" width="900" height="900"></canvas><p class="small">Esses ajustes serão usados nos PDFs e PNGs das placas.</p></div>
+</div>
 </div>
 
 <div id="admCong" class="admPane">
@@ -215,6 +232,13 @@ var DEFAULT_CONFIG = {
   blessDe: "Gott segne euch",
   blessPt: "Deus vos abençoe",
   plateQrPercent: 48,
+  plateLogoPercent: 20,
+  plateCirclePercent: 160,
+  plateBorderWidth: 4,
+  plateBorderOpacity: 18,
+  plateShadowOpacity: 22,
+  plateShadowBlur: 18,
+  plateShadowOffset: 6,
   congregations: ["Backnang", "Stuttgart", "Mannheim", "Karlsruhe", "Heidelberg", "Frankfurt", "Hamburg", "München"]
 };
 
@@ -227,14 +251,14 @@ function clone(obj) { return JSON.parse(JSON.stringify(obj)); }
 
 function loadConfig() {
   try {
-    var saved = localStorage.getItem("ckdConfig51");
+    var saved = localStorage.getItem("ckdConfigV6");
     if (saved) return Object.assign(clone(DEFAULT_CONFIG), JSON.parse(saved));
   } catch (e) {}
   return clone(DEFAULT_CONFIG);
 }
 
 function saveConfig() {
-  localStorage.setItem("ckdConfig51", JSON.stringify(config));
+  localStorage.setItem("ckdConfigV6", JSON.stringify(config));
 }
 
 function setStatus(msg) {
@@ -275,8 +299,9 @@ function epcPayload(ref, cfg) {
   ].join("\n");
 }
 
-function drawQr(canvas, ref, cfg) {
+function drawQr(canvas, ref, cfg, style) {
   cfg = cfg || config;
+  style = style || cfg;
   new QRious({
     element: canvas,
     value: epcPayload(ref, cfg),
@@ -290,18 +315,18 @@ function drawQr(canvas, ref, cfg) {
   var logo = new Image();
   logo.onload = function() {
     var W = canvas.width;
-    var logoW = W * (Number(cfg.logoPercent) / 100);
+    var logoW = W * (Number(style.logoPercent) / 100);
     var logoH = logo.height * (logoW / logo.width);
-    var circleD = Math.max(logoW, logoH) * (Number(cfg.circlePercent) / 100);
+    var circleD = Math.max(logoW, logoH) * (Number(style.circlePercent) / 100);
     var cx = W / 2;
     var cy = W / 2;
     var radius = circleD / 2;
 
     ctx.save();
-    if (Number(cfg.shadowOpacity) > 0 && Number(cfg.shadowBlur) > 0) {
-      ctx.shadowColor = "rgba(0,0,0," + (Number(cfg.shadowOpacity) / 100) + ")";
-      ctx.shadowBlur = Number(cfg.shadowBlur);
-      ctx.shadowOffsetY = Number(cfg.shadowOffset);
+    if (Number(style.shadowOpacity) > 0 && Number(style.shadowBlur) > 0) {
+      ctx.shadowColor = "rgba(0,0,0," + (Number(style.shadowOpacity) / 100) + ")";
+      ctx.shadowBlur = Number(style.shadowBlur);
+      ctx.shadowOffsetY = Number(style.shadowOffset);
     }
     ctx.beginPath();
     ctx.arc(cx, cy, radius, 0, Math.PI * 2);
@@ -309,12 +334,12 @@ function drawQr(canvas, ref, cfg) {
     ctx.fill();
     ctx.restore();
 
-    if (Number(cfg.borderWidth) > 0 && Number(cfg.borderOpacity) > 0) {
+    if (Number(style.borderWidth) > 0 && Number(style.borderOpacity) > 0) {
       ctx.save();
       ctx.beginPath();
-      ctx.arc(cx, cy, radius - Number(cfg.borderWidth) / 2, 0, Math.PI * 2);
-      ctx.lineWidth = Number(cfg.borderWidth);
-      ctx.strokeStyle = "rgba(80,80,80," + (Number(cfg.borderOpacity) / 100) + ")";
+      ctx.arc(cx, cy, radius - Number(style.borderWidth) / 2, 0, Math.PI * 2);
+      ctx.lineWidth = Number(style.borderWidth);
+      ctx.strokeStyle = "rgba(80,80,80," + (Number(style.borderOpacity) / 100) + ")";
       ctx.stroke();
       ctx.restore();
     }
@@ -324,16 +349,44 @@ function drawQr(canvas, ref, cfg) {
   logo.src = "logo.png";
 }
 
+function mainQrStyle() {
+  return {
+    logoPercent: Number(config.logoPercent),
+    circlePercent: Number(config.circlePercent),
+    borderWidth: Number(config.borderWidth),
+    borderOpacity: Number(config.borderOpacity),
+    shadowOpacity: Number(config.shadowOpacity),
+    shadowBlur: Number(config.shadowBlur),
+    shadowOffset: Number(config.shadowOffset)
+  };
+}
+
+function plateQrStyle() {
+  return {
+    logoPercent: Number(config.plateLogoPercent),
+    circlePercent: Number(config.plateCirclePercent),
+    borderWidth: Number(config.plateBorderWidth),
+    borderOpacity: Number(config.plateBorderOpacity),
+    shadowOpacity: Number(config.plateShadowOpacity),
+    shadowBlur: Number(config.plateShadowBlur),
+    shadowOffset: Number(config.plateShadowOffset)
+  };
+}
+
 function renderQr() {
   var name = selectedName("refSelect", "customRef");
   var ref = finalReference(name);
   el("finalRef").textContent = ref;
-  drawQr(el("qrCanvas"), ref, config);
+  drawQr(el("qrCanvas"), ref, config, mainQrStyle());
 }
 
 function renderPreview() {
   var cfg = readVisualConfig();
-  drawQr(el("previewCanvas"), cfg.prefix + "Backnang", cfg);
+  drawQr(el("previewCanvas"), config.prefix + "Backnang", config, cfg);
+}
+
+function renderPlateQrPreview() {
+  drawQr(el("plateQrPreviewCanvas"), config.prefix + "Backnang", config, readPlateStyleFromAdm());
 }
 
 function populateSelects() {
@@ -407,7 +460,7 @@ function renderPlateOnCanvas(canvas, name, size, done) {
     var temp = document.createElement("canvas");
     temp.width = qrSize;
     temp.height = qrSize;
-    drawQr(temp, ref, config);
+    drawQr(temp, ref, config, plateQrStyle());
 
     setTimeout(function() {
       ctx.drawImage(temp, (W - qrSize) / 2, H * 0.39, qrSize, qrSize);
@@ -498,22 +551,36 @@ function bindRange(name, key, min, max) {
     v = Math.max(min, Math.min(max, Number(v)));
     number.value = v;
     range.value = v;
-    renderPreview();
+    if (name.indexOf("plate") === 0 && name !== "plateQrPercent") renderPlateQrPreview();
+    else if (name === "plateQrPercent") renderPlate();
+    else renderPreview();
   }
   number.addEventListener("input", function(){ update(number.value); });
   range.addEventListener("input", function(){ update(range.value); });
 }
 
 function readVisualConfig() {
-  var cfg = clone(config);
-  cfg.logoPercent = Number(el("logoPercent").value);
-  cfg.circlePercent = Number(el("circlePercent").value);
-  cfg.borderWidth = Number(el("borderWidth").value);
-  cfg.borderOpacity = Number(el("borderOpacity").value);
-  cfg.shadowOpacity = Number(el("shadowOpacity").value);
-  cfg.shadowBlur = Number(el("shadowBlur").value);
-  cfg.shadowOffset = Number(el("shadowOffset").value);
-  return cfg;
+  return {
+    logoPercent: Number(el("logoPercent").value),
+    circlePercent: Number(el("circlePercent").value),
+    borderWidth: Number(el("borderWidth").value),
+    borderOpacity: Number(el("borderOpacity").value),
+    shadowOpacity: Number(el("shadowOpacity").value),
+    shadowBlur: Number(el("shadowBlur").value),
+    shadowOffset: Number(el("shadowOffset").value)
+  };
+}
+
+function readPlateStyleFromAdm() {
+  return {
+    logoPercent: Number(el("plateLogoPercent").value),
+    circlePercent: Number(el("plateCirclePercent").value),
+    borderWidth: Number(el("plateBorderWidth").value),
+    borderOpacity: Number(el("plateBorderOpacity").value),
+    shadowOpacity: Number(el("plateShadowOpacity").value),
+    shadowBlur: Number(el("plateShadowBlur").value),
+    shadowOffset: Number(el("plateShadowOffset").value)
+  };
 }
 
 function fillAdmin() {
@@ -537,13 +604,36 @@ function fillAdmin() {
   setRange("shadowBlur", config.shadowBlur);
   setRange("shadowOffset", config.shadowOffset);
   setRange("plateQrPercent", config.plateQrPercent);
+  setRange("plateLogoPercent", config.plateLogoPercent);
+  setRange("plateCirclePercent", config.plateCirclePercent);
+  setRange("plateBorderWidth", config.plateBorderWidth);
+  setRange("plateBorderOpacity", config.plateBorderOpacity);
+  setRange("plateShadowOpacity", config.plateShadowOpacity);
+  setRange("plateShadowBlur", config.plateShadowBlur);
+  setRange("plateShadowOffset", config.plateShadowOffset);
 
   renderPreview();
+  renderPlateQrPreview();
 }
 
 function saveAdmin() {
   var visual = readVisualConfig();
-  Object.assign(config, visual);
+  config.logoPercent = visual.logoPercent;
+  config.circlePercent = visual.circlePercent;
+  config.borderWidth = visual.borderWidth;
+  config.borderOpacity = visual.borderOpacity;
+  config.shadowOpacity = visual.shadowOpacity;
+  config.shadowBlur = visual.shadowBlur;
+  config.shadowOffset = visual.shadowOffset;
+
+  var pStyle = readPlateStyleFromAdm();
+  config.plateLogoPercent = pStyle.logoPercent;
+  config.plateCirclePercent = pStyle.circlePercent;
+  config.plateBorderWidth = pStyle.borderWidth;
+  config.plateBorderOpacity = pStyle.borderOpacity;
+  config.plateShadowOpacity = pStyle.shadowOpacity;
+  config.plateShadowBlur = pStyle.shadowBlur;
+  config.plateShadowOffset = pStyle.shadowOffset;
 
   config.adminPassword = el("admPassword").value.trim() || "CKD2025";
   config.prefix = el("admPrefix").value.trim() || "CKD-";
@@ -574,7 +664,7 @@ function exportConfig() {
 }
 
 function resetConfig() {
-  localStorage.removeItem("ckdConfig51");
+  localStorage.removeItem("ckdConfigV6");
   config = clone(DEFAULT_CONFIG);
   init();
   fillAdmin();
@@ -607,6 +697,7 @@ document.addEventListener("DOMContentLoaded", function() {
       btn.classList.add("active");
       el(btn.dataset.admin).classList.add("active");
       if (btn.dataset.admin === "admQr") renderPreview();
+      if (btn.dataset.admin === "admPlateQr") renderPlateQrPreview();
     });
   });
 
@@ -657,6 +748,13 @@ document.addEventListener("DOMContentLoaded", function() {
   bindRange("shadowBlur", "shadowBlur", 0, 40);
   bindRange("shadowOffset", "shadowOffset", 0, 20);
   bindRange("plateQrPercent", "plateQrPercent", 35, 65);
+  bindRange("plateLogoPercent", "plateLogoPercent", 5, 25);
+  bindRange("plateCirclePercent", "plateCirclePercent", 120, 220);
+  bindRange("plateBorderWidth", "plateBorderWidth", 0, 18);
+  bindRange("plateBorderOpacity", "plateBorderOpacity", 0, 100);
+  bindRange("plateShadowOpacity", "plateShadowOpacity", 0, 100);
+  bindRange("plateShadowBlur", "plateShadowBlur", 0, 40);
+  bindRange("plateShadowOffset", "plateShadowOffset", 0, 20);
 
   el("saveAdmBtn").addEventListener("click", saveAdmin);
   el("resetBtn").addEventListener("click", resetConfig);
