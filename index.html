@@ -1,209 +1,677 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CKD - Gerador SEPA GiroCode</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CKD SEPA GiroCode</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f4f1ea;font-family:Arial,Helvetica,sans-serif;color:#171717}
+.app{max-width:860px;margin:0 auto;padding:22px}
+.card{background:#fff;border:1px solid #ddd;border-radius:22px;padding:24px;box-shadow:0 12px 34px rgba(0,0,0,.07)}
+.header{text-align:center;margin-bottom:22px}
+.logo{max-width:230px;width:70%;height:auto;margin-bottom:12px;user-select:none}
+h1{margin:4px 0 8px;font-size:28px}
+h2{margin-top:0}
+p{line-height:1.45}
+.small,.header p,.final-ref{color:#666}
+label{display:block;margin:16px 0 7px;font-weight:700}
+input,select,textarea{width:100%;border:1px solid #ddd;border-radius:12px;padding:13px 14px;font-size:17px;background:#fff}
+textarea{font-family:Arial,Helvetica,sans-serif}
+button{border:0;border-radius:12px;padding:12px 16px;font-size:16px;cursor:pointer;background:#e8e8e8;color:#111}
+button.primary,#generateBtn{background:#111;color:#fff}
+.buttonRow{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;background:#f2f2f2;border-radius:14px;padding:6px;margin:14px 0 18px}
+.tab,.admTab{flex:1 1 120px;padding:10px 12px;font-weight:700;background:transparent}
+.tab.active,.admTab.active{background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.08)}
+.pane,.admPane{display:none}
+.pane.active,.admPane.active{display:block}
+.qrBox,.plateBox{text-align:center;margin:22px 0}
+canvas{width:min(100%,520px);height:auto;background:#fff;border-radius:12px}
+#plateCanvas{width:min(100%,480px);box-shadow:0 8px 24px rgba(0,0,0,.12)}
+.bankData,.notice{background:#f7f7f7;border:1px solid #ddd;border-radius:16px;padding:16px}
+.copy{padding:6px 10px;font-size:13px;margin-left:8px}
+.hidden{display:none!important}
+#status{min-height:22px;font-weight:700}
+.adminTop{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
+.grid2{display:grid;grid-template-columns:1fr 0.9fr;gap:18px;align-items:start}
+.controlRow{background:#fff;border:1px solid #ddd;border-radius:14px;padding:12px;margin-bottom:10px}
+.rangePair{display:grid;grid-template-columns:1fr 80px;gap:10px;align-items:center}
+input[type=range]{padding:0}
+.previewBox{background:#f7f7f7;border:1px solid #ddd;border-radius:16px;padding:16px;text-align:center;position:sticky;top:12px}
+#previewCanvas{width:min(100%,330px)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.46);display:flex;align-items:center;justify-content:center;padding:18px;z-index:999}
+.modalCard{width:min(100%,420px);background:#fff;border-radius:20px;padding:24px;box-shadow:0 18px 60px rgba(0,0,0,.25)}
+.error{color:#b00020;font-weight:700}
+@media(max-width:760px){.grid2{grid-template-columns:1fr}.previewBox{position:static}}
+@media(max-width:560px){.app{padding:12px}.card{padding:18px}h1{font-size:24px}.buttonRow button{width:100%}.rangePair{grid-template-columns:1fr}.logo{width:90%}}
+</style>
 </head>
 <body>
-  <main class="app">
-    <section class="card">
-      <header class="header">
-        <img src="logo.png" alt="CKD" class="logo" id="ckdLogo" title="CKD">
-        <h1>Gerador SEPA / GiroCode</h1>
-        <p>Crie QR Codes EPC/SEPA para doações. O valor fica em branco para o doador escolher no banco.</p>
-      </header>
+<main class="app">
+<section class="card">
+<header class="header">
+<img src="logo.png" class="logo" id="logo" alt="CKD">
+<h1>Gerador SEPA / GiroCode</h1>
+<p>QR Codes EPC/SEPA e placas A5/A4 para doações.</p>
+</header>
 
-      <section id="userPanel">
-        <label for="referenceSelect">Congregação / referência</label>
-        <select id="referenceSelect"></select>
+<section id="userPanel">
+<div class="tabs">
+<button type="button" class="tab active" data-pane="qrPane">QR Code</button>
+<button type="button" class="tab" data-pane="platePane">Placas A5/A4</button>
+</div>
 
-        <div id="customRefBox" class="hidden">
-          <label for="customRef">Outra referência</label>
-          <input id="customRef" type="text" placeholder="Exemplo: Nürnberg">
-        </div>
+<div id="qrPane" class="pane active">
+<label for="refSelect">Congregação / referência</label>
+<select id="refSelect"></select>
+<div id="customRefWrap" class="hidden">
+<label for="customRef">Outra referência</label>
+<input id="customRef" placeholder="Exemplo: Nürnberg">
+</div>
+<p class="final-ref">Referência final: <strong id="finalRef"></strong></p>
+<div class="buttonRow">
+<button type="button" id="generateBtn">Gerar QR</button>
+<button type="button" id="downloadQrBtn" class="primary">Baixar PNG</button>
+</div>
+<div class="qrBox"><canvas id="qrCanvas" width="1400" height="1400"></canvas></div>
+</div>
 
-        <p class="final-ref">Referência final: <strong id="finalReference"></strong></p>
+<div id="platePane" class="pane">
+<label for="plateSelect">Casa de oração</label>
+<select id="plateSelect"></select>
+<div id="customPlateWrap" class="hidden">
+<label for="customPlate">Outra casa de oração</label>
+<input id="customPlate" placeholder="Exemplo: Nürnberg">
+</div>
+<label for="plateSize">Formato da placa</label>
+<select id="plateSize">
+<option value="A5">A5 vertical - 148 × 210 mm</option>
+<option value="A4">A4 vertical - 210 × 297 mm</option>
+</select>
+<div class="buttonRow">
+<button type="button" id="renderPlateBtn">Atualizar placa</button>
+<button type="button" id="downloadPlatePngBtn" class="primary">Baixar PNG</button>
+<button type="button" id="downloadPlatePdfBtn" class="primary">Baixar PDF</button>
+<button type="button" id="downloadAllPdfBtn">PDF único com todas</button>
+</div>
+<div class="plateBox"><canvas id="plateCanvas" width="1748" height="2480"></canvas></div>
+</div>
 
-        <div class="buttonRow">
-          <button id="generateBtn" type="button">Gerar QR</button>
-          <button id="downloadBtn" type="button" class="primary">Baixar PNG</button>
-        </div>
+<section class="bankData">
+<h2>Dados bancários</h2>
+<p><strong>Beneficiário:</strong> <span id="bankName"></span></p>
+<p><strong>IBAN:</strong> <span id="bankIban"></span> <button type="button" class="copy" data-copy="iban">Copiar</button></p>
+<p><strong>BIC:</strong> <span id="bankBic"></span> <button type="button" class="copy" data-copy="bic">Copiar</button></p>
+</section>
+</section>
 
-        <div class="qrBox">
-          <canvas id="qrCanvas" width="1400" height="1400"></canvas>
-        </div>
+<section id="adminPanel" class="hidden">
+<div class="adminTop">
+<h2>ADM</h2>
+<button type="button" id="exitAdmBtn">Sair do ADM</button>
+</div>
 
-        <section class="bankData">
-          <h2>Dados bancários</h2>
-          <p><strong>Beneficiário:</strong> <span id="displayName"></span></p>
-          <p><strong>IBAN:</strong> <span id="displayIban"></span> <button class="copy" data-copy="iban">Copiar</button></p>
-          <p><strong>BIC:</strong> <span id="displayBic"></span> <button class="copy" data-copy="bic">Copiar</button></p>
-        </section>
-      </section>
+<div class="tabs">
+<button type="button" class="admTab active" data-admin="admBank">Banco</button>
+<button type="button" class="admTab" data-admin="admQr">QR Code</button>
+<button type="button" class="admTab" data-admin="admPlates">Placas</button>
+<button type="button" class="admTab" data-admin="admCong">Congregações</button>
+<button type="button" class="admTab" data-admin="admSec">Segurança</button>
+</div>
 
-      <section id="adminPanel" class="hidden">
-        <div class="adminTop">
-          <h2>ADM</h2>
-          <button id="exitAdminBtn" type="button">Sair do ADM</button>
-        </div>
+<div id="admBank" class="admPane active">
+<div class="notice">Dados usados no QR EPC/SEPA.</div>
+<label>Prefixo da referência</label><input id="admPrefix">
+<label>Beneficiário</label><input id="admName">
+<label>IBAN</label><input id="admIban">
+<label>BIC</label><input id="admBic">
+</div>
 
-        <div class="adminTabs">
-          <button class="adminTab active" data-tab="bankTab" type="button">Banco</button>
-          <button class="adminTab" data-tab="qrTab" type="button">QR Code</button>
-          <button class="adminTab" data-tab="congregationsTab" type="button">Congregações</button>
-          <button class="adminTab" data-tab="securityTab" type="button">Segurança</button>
-          <button class="adminTab" data-tab="backupTab" type="button">Backup</button>
-        </div>
+<div id="admQr" class="admPane">
+<div class="grid2">
+<div>
+<div class="controlRow"><label>Logo (%)</label><div class="rangePair"><input id="logoPercentRange" type="range" min="5" max="25" step="1"><input id="logoPercent" type="number" min="5" max="25" step="1"></div></div>
+<div class="controlRow"><label>Círculo branco (%)</label><div class="rangePair"><input id="circlePercentRange" type="range" min="120" max="220" step="5"><input id="circlePercent" type="number" min="120" max="220" step="5"></div></div>
+<div class="controlRow"><label>Borda cinza (px)</label><div class="rangePair"><input id="borderWidthRange" type="range" min="0" max="18" step="1"><input id="borderWidth" type="number" min="0" max="18" step="1"></div></div>
+<div class="controlRow"><label>Transparência da borda (%)</label><div class="rangePair"><input id="borderOpacityRange" type="range" min="0" max="100" step="5"><input id="borderOpacity" type="number" min="0" max="100" step="5"></div></div>
+<div class="controlRow"><label>Sombra (%)</label><div class="rangePair"><input id="shadowOpacityRange" type="range" min="0" max="100" step="5"><input id="shadowOpacity" type="number" min="0" max="100" step="5"></div></div>
+<div class="controlRow"><label>Desfoque sombra</label><div class="rangePair"><input id="shadowBlurRange" type="range" min="0" max="40" step="1"><input id="shadowBlur" type="number" min="0" max="40" step="1"></div></div>
+<div class="controlRow"><label>Distância sombra</label><div class="rangePair"><input id="shadowOffsetRange" type="range" min="0" max="20" step="1"><input id="shadowOffset" type="number" min="0" max="20" step="1"></div></div>
+</div>
+<div class="previewBox">
+<h3>Pré-visualização</h3>
+<canvas id="previewCanvas" width="900" height="900"></canvas>
+<p class="small">A prévia só altera o QR principal quando salvar.</p>
+</div>
+</div>
+</div>
 
-        <div id="bankTab" class="tabPanel active">
-          <div class="notice">
-            Dados usados no QR EPC/SEPA. Altere com cuidado e teste no aplicativo bancário.
-          </div>
+<div id="admPlates" class="admPane">
+<label>Frase em alemão</label><input id="plateDe">
+<label>Frase em português</label><input id="platePt">
+<label>Bênção em alemão</label><input id="blessDe">
+<label>Bênção em português</label><input id="blessPt">
+<div class="controlRow"><label>Tamanho do QR na placa (%)</label><div class="rangePair"><input id="plateQrPercentRange" type="range" min="35" max="65" step="1"><input id="plateQrPercent" type="number" min="35" max="65" step="1"></div></div>
+</div>
 
-          <label for="adminPrefix">Prefixo da referência</label>
-          <input id="adminPrefix" type="text">
+<div id="admCong" class="admPane">
+<label>Congregações, uma por linha</label>
+<textarea id="admCongregations" rows="9"></textarea>
+</div>
 
-          <label for="adminName">Nome do beneficiário</label>
-          <input id="adminName" type="text">
+<div id="admSec" class="admPane">
+<label>Senha ADM</label><input id="admPassword">
+<p class="small">Proteção interna leve para GitHub Pages.</p>
+</div>
 
-          <label for="adminIban">IBAN</label>
-          <input id="adminIban" type="text">
+<div class="buttonRow">
+<button type="button" id="saveAdmBtn" class="primary">Salvar configurações</button>
+<button type="button" id="resetBtn">Restaurar padrão</button>
+<button type="button" id="exportBtn">Exportar config.js</button>
+</div>
+</section>
 
-          <label for="adminBic">BIC</label>
-          <input id="adminBic" type="text">
-        </div>
+<footer>
+<p id="status"></p>
+<p class="small">Formato EPC/SEPA/GiroCode. Teste antes de imprimir.</p>
+</footer>
+</section>
+</main>
 
-        <div id="qrTab" class="tabPanel">
-          <div class="notice">
-            Ajuste abaixo sem medo: primeiro veja na pré-visualização. Depois use <strong>Aplicar</strong> ou <strong>Salvar</strong>.
-          </div>
+<div id="loginModal" class="modal hidden">
+<div class="modalCard">
+<h2>Área ADM</h2>
+<p>Digite a senha.</p>
+<input id="passwordInput" type="password" placeholder="Senha">
+<div class="buttonRow">
+<button type="button" id="loginBtn" class="primary">Entrar</button>
+<button type="button" id="cancelLoginBtn">Cancelar</button>
+</div>
+<p id="loginError" class="error hidden">Senha incorreta.</p>
+</div>
+</div>
 
-          <div class="qrAdminGrid">
-            <div class="qrControls">
-              <div class="controlRow">
-                <label>Tamanho do logo (%) <small>recomendado: 18–22</small></label>
-                <div class="rangePair">
-                  <input id="previewLogoPercentRange" type="range" min="5" max="25" step="1">
-                  <input id="previewLogoPercent" type="number" min="5" max="25" step="1">
-                </div>
-              </div>
+<script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script>
+"use strict";
 
-              <div class="controlRow">
-                <label>Tamanho do círculo branco (%) <small>recomendado: 145–170</small></label>
-                <div class="rangePair">
-                  <input id="previewCircleMarginPercentRange" type="range" min="120" max="220" step="5">
-                  <input id="previewCircleMarginPercent" type="number" min="120" max="220" step="5">
-                </div>
-              </div>
+var DEFAULT_CONFIG = {
+  adminPassword: "CKD2025",
+  prefix: "CKD-",
+  beneficiary: "CHRISTLICHE KONGREGATION IN DEUTSCH.",
+  iban: "DE05340600940000734509",
+  bic: "VBRSDE33XXX",
+  logoPercent: 20,
+  circlePercent: 160,
+  borderWidth: 4,
+  borderOpacity: 18,
+  shadowOpacity: 22,
+  shadowBlur: 18,
+  shadowOffset: 6,
+  plateDe: "Kollekten per Banküberweisung",
+  platePt: "Coleta por transferência bancária",
+  blessDe: "Gott segne euch",
+  blessPt: "Deus vos abençoe",
+  plateQrPercent: 48,
+  congregations: ["Backnang", "Stuttgart", "Mannheim", "Karlsruhe", "Heidelberg", "Frankfurt", "Hamburg", "München"]
+};
 
-              <div class="controlRow">
-                <label>Espessura da borda cinza (px) <small>recomendado: 2–6</small></label>
-                <div class="rangePair">
-                  <input id="previewBorderWidthRange" type="range" min="0" max="18" step="1">
-                  <input id="previewBorderWidth" type="number" min="0" max="18" step="1">
-                </div>
-              </div>
+var config = loadConfig();
+var clicks = 0;
+var clickTimer = null;
 
-              <div class="controlRow">
-                <label>Transparência da borda (%) <small>menor = mais discreta</small></label>
-                <div class="rangePair">
-                  <input id="previewBorderOpacityRange" type="range" min="0" max="100" step="5">
-                  <input id="previewBorderOpacity" type="number" min="0" max="100" step="5">
-                </div>
-              </div>
+function el(id) { return document.getElementById(id); }
+function clone(obj) { return JSON.parse(JSON.stringify(obj)); }
 
-              <div class="controlRow">
-                <label>Intensidade da sombra (%)</label>
-                <div class="rangePair">
-                  <input id="previewShadowOpacityRange" type="range" min="0" max="100" step="5">
-                  <input id="previewShadowOpacity" type="number" min="0" max="100" step="5">
-                </div>
-              </div>
+function loadConfig() {
+  try {
+    var saved = localStorage.getItem("ckdConfig51");
+    if (saved) return Object.assign(clone(DEFAULT_CONFIG), JSON.parse(saved));
+  } catch (e) {}
+  return clone(DEFAULT_CONFIG);
+}
 
-              <div class="controlRow">
-                <label>Desfoque da sombra (px)</label>
-                <div class="rangePair">
-                  <input id="previewShadowBlurRange" type="range" min="0" max="40" step="1">
-                  <input id="previewShadowBlur" type="number" min="0" max="40" step="1">
-                </div>
-              </div>
+function saveConfig() {
+  localStorage.setItem("ckdConfig51", JSON.stringify(config));
+}
 
-              <div class="controlRow">
-                <label>Distância da sombra (px)</label>
-                <div class="rangePair">
-                  <input id="previewShadowOffsetRange" type="range" min="0" max="20" step="1">
-                  <input id="previewShadowOffset" type="number" min="0" max="20" step="1">
-                </div>
-              </div>
-            </div>
+function setStatus(msg) {
+  el("status").textContent = msg;
+  setTimeout(function(){ if (el("status").textContent === msg) el("status").textContent = ""; }, 2500);
+}
 
-            <div class="qrPreview">
-              <h3>Pré-visualização</h3>
-              <canvas id="previewCanvas" width="900" height="900"></canvas>
-              <p class="small">Esta prévia não altera o QR principal até você clicar em Aplicar ou Salvar.</p>
-              <div class="buttonRow previewButtons">
-                <button id="cancelPreviewBtn" type="button">Cancelar</button>
-                <button id="applyPreviewBtn" type="button">Aplicar</button>
-                <button id="saveFromPreviewBtn" type="button" class="primary">Salvar</button>
-              </div>
-            </div>
-          </div>
-        </div>
+function formatIban(iban) {
+  return iban.replace(/\s+/g, "").replace(/(.{4})/g, "$1 ").trim();
+}
 
-        <div id="congregationsTab" class="tabPanel">
-          <label for="adminCongregations">Lista de referências/congregações, uma por linha</label>
-          <textarea id="adminCongregations" rows="9"></textarea>
-        </div>
+function selectedName(selectId, customId) {
+  var value = el(selectId).value;
+  if (value === "__custom__") value = el(customId).value || "Backnang";
+  return (value || "Backnang").trim();
+}
 
-        <div id="securityTab" class="tabPanel">
-          <label for="adminPassword">Senha do ADM</label>
-          <input id="adminPassword" type="text">
-          <p class="small">Como o site é estático no GitHub Pages, esta é uma proteção interna leve.</p>
-        </div>
+function finalReference(name) {
+  name = (name || "Backnang").replace(/^CKD[-\s]*/i, "").trim();
+  return config.prefix + name;
+}
 
-        <div id="backupTab" class="tabPanel">
-          <div class="notice">
-            Para tornar as mudanças permanentes no GitHub, exporte o <strong>config.js</strong> e substitua o arquivo no repositório.
-          </div>
+function epcPayload(ref, cfg) {
+  cfg = cfg || config;
+  return [
+    "BCD",
+    "002",
+    "1",
+    "SCT",
+    cfg.bic.replace(/\s+/g, ""),
+    cfg.beneficiary,
+    cfg.iban.replace(/\s+/g, ""),
+    "",
+    "",
+    "",
+    ref,
+    ""
+  ].join("\n");
+}
 
-          <label for="importConfigFile">Importar config.js</label>
-          <input id="importConfigFile" type="file" accept=".js,.txt">
+function drawQr(canvas, ref, cfg) {
+  cfg = cfg || config;
+  new QRious({
+    element: canvas,
+    value: epcPayload(ref, cfg),
+    size: canvas.width,
+    level: "H",
+    background: "white",
+    foreground: "black"
+  });
 
-          <div class="buttonRow">
-            <button id="exportConfigBtn" type="button">Exportar config.js</button>
-            <button id="resetAdminBtn" type="button">Restaurar padrão</button>
-          </div>
-        </div>
+  var ctx = canvas.getContext("2d");
+  var logo = new Image();
+  logo.onload = function() {
+    var W = canvas.width;
+    var logoW = W * (Number(cfg.logoPercent) / 100);
+    var logoH = logo.height * (logoW / logo.width);
+    var circleD = Math.max(logoW, logoH) * (Number(cfg.circlePercent) / 100);
+    var cx = W / 2;
+    var cy = W / 2;
+    var radius = circleD / 2;
 
-        <div class="buttonRow adminSaveRow">
-          <button id="saveAdminBtn" type="button" class="primary">Salvar configurações</button>
-        </div>
-      </section>
+    ctx.save();
+    if (Number(cfg.shadowOpacity) > 0 && Number(cfg.shadowBlur) > 0) {
+      ctx.shadowColor = "rgba(0,0,0," + (Number(cfg.shadowOpacity) / 100) + ")";
+      ctx.shadowBlur = Number(cfg.shadowBlur);
+      ctx.shadowOffsetY = Number(cfg.shadowOffset);
+    }
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+    ctx.fillStyle = "white";
+    ctx.fill();
+    ctx.restore();
 
-      <footer>
-        <p id="status"></p>
-        <p class="small">Formato EPC/SEPA/GiroCode. Teste no aplicativo bancário antes de imprimir em grande quantidade.</p>
-      </footer>
-    </section>
-  </main>
+    if (Number(cfg.borderWidth) > 0 && Number(cfg.borderOpacity) > 0) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius - Number(cfg.borderWidth) / 2, 0, Math.PI * 2);
+      ctx.lineWidth = Number(cfg.borderWidth);
+      ctx.strokeStyle = "rgba(80,80,80," + (Number(cfg.borderOpacity) / 100) + ")";
+      ctx.stroke();
+      ctx.restore();
+    }
 
-  <div id="loginModal" class="modal hidden">
-    <div class="modalCard">
-      <h2>Área ADM</h2>
-      <p>Digite a senha para acessar as configurações.</p>
-      <input id="passwordInput" type="password" placeholder="Senha">
-      <div class="buttonRow">
-        <button id="loginBtn" type="button" class="primary">Entrar</button>
-        <button id="cancelLoginBtn" type="button">Cancelar</button>
-      </div>
-      <p id="loginError" class="error hidden">Senha incorreta.</p>
-    </div>
-  </div>
+    ctx.drawImage(logo, cx - logoW / 2, cy - logoH / 2, logoW, logoH);
+  };
+  logo.src = "logo.png";
+}
 
-  <script src="config.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
-  <script src="app.js"></script>
+function renderQr() {
+  var name = selectedName("refSelect", "customRef");
+  var ref = finalReference(name);
+  el("finalRef").textContent = ref;
+  drawQr(el("qrCanvas"), ref, config);
+}
+
+function renderPreview() {
+  var cfg = readVisualConfig();
+  drawQr(el("previewCanvas"), cfg.prefix + "Backnang", cfg);
+}
+
+function populateSelects() {
+  ["refSelect", "plateSelect"].forEach(function(id) {
+    var s = el(id);
+    s.innerHTML = "";
+    config.congregations.forEach(function(name) {
+      var opt = document.createElement("option");
+      opt.value = name;
+      opt.textContent = name;
+      s.appendChild(opt);
+    });
+    var custom = document.createElement("option");
+    custom.value = "__custom__";
+    custom.textContent = "Outra...";
+    s.appendChild(custom);
+  });
+}
+
+function updateBank() {
+  el("bankName").textContent = config.beneficiary;
+  el("bankIban").textContent = formatIban(config.iban);
+  el("bankBic").textContent = config.bic;
+}
+
+function renderPlate() {
+  var name = selectedName("plateSelect", "customPlate");
+  var size = el("plateSize").value;
+  renderPlateOnCanvas(el("plateCanvas"), name, size, function(){});
+}
+
+function renderPlateOnCanvas(canvas, name, size, done) {
+  if (size === "A4") {
+    canvas.width = 2480;
+    canvas.height = 3508;
+  } else {
+    canvas.width = 1748;
+    canvas.height = 2480;
+  }
+
+  var ctx = canvas.getContext("2d");
+  var W = canvas.width;
+  var H = canvas.height;
+  var ref = finalReference(name);
+
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.strokeStyle = "#d9d9d9";
+  ctx.lineWidth = Math.max(6, W * 0.006);
+  ctx.strokeRect(W * 0.055, H * 0.045, W * 0.89, H * 0.91);
+
+  var logo = new Image();
+  logo.onload = function() {
+    var logoW = W * 0.36;
+    var logoH = logo.height * (logoW / logo.width);
+    ctx.drawImage(logo, (W - logoW) / 2, H * 0.07, logoW, logoH);
+
+    ctx.fillStyle = "#111";
+    ctx.textAlign = "center";
+    ctx.font = "700 " + Math.round(W * 0.065) + "px Arial";
+    ctx.fillText(name, W / 2, H * 0.245);
+
+    ctx.font = "400 " + Math.round(W * 0.032) + "px Arial";
+    ctx.fillText(config.plateDe, W / 2, H * 0.292);
+
+    ctx.font = "400 " + Math.round(W * 0.030) + "px Arial";
+    ctx.fillText(config.platePt, W / 2, H * 0.33);
+
+    var qrSize = Math.round(W * (Number(config.plateQrPercent) / 100));
+    var temp = document.createElement("canvas");
+    temp.width = qrSize;
+    temp.height = qrSize;
+    drawQr(temp, ref, config);
+
+    setTimeout(function() {
+      ctx.drawImage(temp, (W - qrSize) / 2, H * 0.39, qrSize, qrSize);
+
+      ctx.fillStyle = "#111";
+      ctx.font = "700 " + Math.round(W * 0.034) + "px Arial";
+      ctx.fillText(config.blessDe, W / 2, H * 0.83);
+
+      ctx.font = "400 " + Math.round(W * 0.031) + "px Arial";
+      ctx.fillText(config.blessPt, W / 2, H * 0.865);
+
+      ctx.fillStyle = "#666";
+      ctx.font = "400 " + Math.round(W * 0.020) + "px Arial";
+      ctx.fillText(config.beneficiary, W / 2, H * 0.925);
+      ctx.fillText(formatIban(config.iban) + "  •  " + config.bic, W / 2, H * 0.95);
+      if (done) done();
+    }, 250);
+  };
+  logo.src = "logo.png";
+}
+
+function downloadCanvasPng(canvas, filename) {
+  var a = document.createElement("a");
+  a.download = filename;
+  a.href = canvas.toDataURL("image/png");
+  a.click();
+}
+
+function downloadQr() {
+  renderQr();
+  setTimeout(function() {
+    downloadCanvasPng(el("qrCanvas"), "CKD_SEPA_" + finalReference(selectedName("refSelect","customRef")).replace(/[^A-Za-z0-9_-]/g, "_") + ".png");
+  }, 350);
+}
+
+function downloadPlatePng() {
+  renderPlateOnCanvas(el("plateCanvas"), selectedName("plateSelect","customPlate"), el("plateSize").value, function() {
+    downloadCanvasPng(el("plateCanvas"), "CKD_Placa_" + el("plateSize").value + "_" + selectedName("plateSelect","customPlate").replace(/[^A-Za-z0-9_-]/g, "_") + ".png");
+  });
+}
+
+function downloadPlatePdf() {
+  var name = selectedName("plateSelect", "customPlate");
+  var size = el("plateSize").value;
+  renderPlateOnCanvas(el("plateCanvas"), name, size, function() {
+    var jsPDF = window.jspdf.jsPDF;
+    var pageW = size === "A4" ? 210 : 148;
+    var pageH = size === "A4" ? 297 : 210;
+    var pdf = new jsPDF({orientation:"portrait", unit:"mm", format:size.toLowerCase()});
+    pdf.addImage(el("plateCanvas").toDataURL("image/png"), "PNG", 0, 0, pageW, pageH);
+    pdf.save("CKD_Placa_" + size + "_" + name.replace(/[^A-Za-z0-9_-]/g, "_") + ".pdf");
+  });
+}
+
+function downloadAllPdf() {
+  var size = el("plateSize").value;
+  var jsPDF = window.jspdf.jsPDF;
+  var pageW = size === "A4" ? 210 : 148;
+  var pageH = size === "A4" ? 297 : 210;
+  var pdf = new jsPDF({orientation:"portrait", unit:"mm", format:size.toLowerCase()});
+  var temp = document.createElement("canvas");
+  var i = 0;
+
+  function next() {
+    if (i >= config.congregations.length) {
+      pdf.save("CKD_Todas_Placas_" + size + ".pdf");
+      return;
+    }
+    if (i > 0) pdf.addPage(size.toLowerCase(), "portrait");
+    renderPlateOnCanvas(temp, config.congregations[i], size, function() {
+      pdf.addImage(temp.toDataURL("image/png"), "PNG", 0, 0, pageW, pageH);
+      i++;
+      next();
+    });
+  }
+  next();
+}
+
+function setRange(name, value) {
+  el(name).value = value;
+  el(name + "Range").value = value;
+}
+
+function bindRange(name, key, min, max) {
+  var number = el(name);
+  var range = el(name + "Range");
+  function update(v) {
+    v = Math.max(min, Math.min(max, Number(v)));
+    number.value = v;
+    range.value = v;
+    renderPreview();
+  }
+  number.addEventListener("input", function(){ update(number.value); });
+  range.addEventListener("input", function(){ update(range.value); });
+}
+
+function readVisualConfig() {
+  var cfg = clone(config);
+  cfg.logoPercent = Number(el("logoPercent").value);
+  cfg.circlePercent = Number(el("circlePercent").value);
+  cfg.borderWidth = Number(el("borderWidth").value);
+  cfg.borderOpacity = Number(el("borderOpacity").value);
+  cfg.shadowOpacity = Number(el("shadowOpacity").value);
+  cfg.shadowBlur = Number(el("shadowBlur").value);
+  cfg.shadowOffset = Number(el("shadowOffset").value);
+  return cfg;
+}
+
+function fillAdmin() {
+  el("admPassword").value = config.adminPassword;
+  el("admPrefix").value = config.prefix;
+  el("admName").value = config.beneficiary;
+  el("admIban").value = config.iban;
+  el("admBic").value = config.bic;
+  el("admCongregations").value = config.congregations.join("\n");
+
+  el("plateDe").value = config.plateDe;
+  el("platePt").value = config.platePt;
+  el("blessDe").value = config.blessDe;
+  el("blessPt").value = config.blessPt;
+
+  setRange("logoPercent", config.logoPercent);
+  setRange("circlePercent", config.circlePercent);
+  setRange("borderWidth", config.borderWidth);
+  setRange("borderOpacity", config.borderOpacity);
+  setRange("shadowOpacity", config.shadowOpacity);
+  setRange("shadowBlur", config.shadowBlur);
+  setRange("shadowOffset", config.shadowOffset);
+  setRange("plateQrPercent", config.plateQrPercent);
+
+  renderPreview();
+}
+
+function saveAdmin() {
+  var visual = readVisualConfig();
+  Object.assign(config, visual);
+
+  config.adminPassword = el("admPassword").value.trim() || "CKD2025";
+  config.prefix = el("admPrefix").value.trim() || "CKD-";
+  config.beneficiary = el("admName").value.trim();
+  config.iban = el("admIban").value.replace(/\s+/g, "").trim();
+  config.bic = el("admBic").value.replace(/\s+/g, "").trim();
+  config.congregations = el("admCongregations").value.split("\n").map(function(x){return x.trim();}).filter(Boolean);
+  config.plateDe = el("plateDe").value.trim();
+  config.platePt = el("platePt").value.trim();
+  config.blessDe = el("blessDe").value.trim();
+  config.blessPt = el("blessPt").value.trim();
+  config.plateQrPercent = Number(el("plateQrPercent").value);
+
+  saveConfig();
+  init();
+  fillAdmin();
+  setStatus("Configurações salvas.");
+}
+
+function exportConfig() {
+  var text = "window.CKD_CONFIG = " + JSON.stringify(config, null, 2) + ";\n";
+  var blob = new Blob([text], {type:"text/javascript"});
+  var a = document.createElement("a");
+  a.download = "config.js";
+  a.href = URL.createObjectURL(blob);
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function resetConfig() {
+  localStorage.removeItem("ckdConfig51");
+  config = clone(DEFAULT_CONFIG);
+  init();
+  fillAdmin();
+  setStatus("Restaurado.");
+}
+
+function init() {
+  populateSelects();
+  updateBank();
+  el("customRefWrap").classList.add("hidden");
+  renderQr();
+  renderPlate();
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+  document.querySelectorAll(".tab").forEach(function(btn) {
+    btn.addEventListener("click", function() {
+      document.querySelectorAll(".tab").forEach(function(b){ b.classList.remove("active"); });
+      document.querySelectorAll(".pane").forEach(function(p){ p.classList.remove("active"); });
+      btn.classList.add("active");
+      el(btn.dataset.pane).classList.add("active");
+      if (btn.dataset.pane === "platePane") renderPlate();
+    });
+  });
+
+  document.querySelectorAll(".admTab").forEach(function(btn) {
+    btn.addEventListener("click", function() {
+      document.querySelectorAll(".admTab").forEach(function(b){ b.classList.remove("active"); });
+      document.querySelectorAll(".admPane").forEach(function(p){ p.classList.remove("active"); });
+      btn.classList.add("active");
+      el(btn.dataset.admin).classList.add("active");
+      if (btn.dataset.admin === "admQr") renderPreview();
+    });
+  });
+
+  el("logo").addEventListener("click", function() {
+    clicks++;
+    clearTimeout(clickTimer);
+    clickTimer = setTimeout(function(){ clicks = 0; }, 1400);
+    if (clicks >= 5) {
+      clicks = 0;
+      el("loginModal").classList.remove("hidden");
+      el("passwordInput").focus();
+    }
+  });
+
+  el("loginBtn").addEventListener("click", function() {
+    if (el("passwordInput").value === config.adminPassword) {
+      el("loginModal").classList.add("hidden");
+      el("userPanel").classList.add("hidden");
+      el("adminPanel").classList.remove("hidden");
+      fillAdmin();
+      setStatus("ADM aberto.");
+    } else {
+      el("loginError").classList.remove("hidden");
+    }
+  });
+
+  el("cancelLoginBtn").addEventListener("click", function(){ el("loginModal").classList.add("hidden"); });
+  el("exitAdmBtn").addEventListener("click", function(){ el("adminPanel").classList.add("hidden"); el("userPanel").classList.remove("hidden"); init(); });
+
+  el("refSelect").addEventListener("change", function(){ el("customRefWrap").classList.toggle("hidden", el("refSelect").value !== "__custom__"); renderQr(); });
+  el("customRef").addEventListener("input", renderQr);
+  el("generateBtn").addEventListener("click", renderQr);
+  el("downloadQrBtn").addEventListener("click", downloadQr);
+
+  el("plateSelect").addEventListener("change", function(){ el("customPlateWrap").classList.toggle("hidden", el("plateSelect").value !== "__custom__"); renderPlate(); });
+  el("customPlate").addEventListener("input", renderPlate);
+  el("plateSize").addEventListener("change", renderPlate);
+  el("renderPlateBtn").addEventListener("click", renderPlate);
+  el("downloadPlatePngBtn").addEventListener("click", downloadPlatePng);
+  el("downloadPlatePdfBtn").addEventListener("click", downloadPlatePdf);
+  el("downloadAllPdfBtn").addEventListener("click", downloadAllPdf);
+
+  bindRange("logoPercent", "logoPercent", 5, 25);
+  bindRange("circlePercent", "circlePercent", 120, 220);
+  bindRange("borderWidth", "borderWidth", 0, 18);
+  bindRange("borderOpacity", "borderOpacity", 0, 100);
+  bindRange("shadowOpacity", "shadowOpacity", 0, 100);
+  bindRange("shadowBlur", "shadowBlur", 0, 40);
+  bindRange("shadowOffset", "shadowOffset", 0, 20);
+  bindRange("plateQrPercent", "plateQrPercent", 35, 65);
+
+  el("saveAdmBtn").addEventListener("click", saveAdmin);
+  el("resetBtn").addEventListener("click", resetConfig);
+  el("exportBtn").addEventListener("click", exportConfig);
+
+  document.querySelectorAll(".copy").forEach(function(btn) {
+    btn.addEventListener("click", function() {
+      var value = btn.dataset.copy === "iban" ? config.iban : config.bic;
+      navigator.clipboard.writeText(value);
+      setStatus("Copiado.");
+    });
+  });
+
+  init();
+});
+</script>
 </body>
 </html>
