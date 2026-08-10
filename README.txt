@@ -1,28 +1,27 @@
-CKD SEPA GiroCode v6.2 — correção definitiva do beneficiário
+CKD SEPA GiroCode v6.3 — Compatibilidade e Diagnóstico EPC
 
-CORREÇÃO:
-O QR EPC/SEPA agora usa SEMPRE este nome legal:
+Beneficiário legal:
 Christliche Kongregation in Deutschland e.V.
 
-A versão 6.2 também corrige automaticamente configurações antigas salvas
-no navegador (localStorage), que eram a causa do nome abreviado continuar
-aparecendo mesmo após substituir o index.html.
+Mudanças:
+- O QR EPC continua usando sempre o nome legal completo.
+- O texto é normalizado em Unicode NFC.
+- Novo botão "Ver conteúdo EPC".
+- Esse botão mostra exatamente o texto gravado no QR antes de escanear.
+- O layout e as placas A5/A4 não foram alterados.
 
-Arquivos para subir no GitHub:
-- index.html
-- logo.png
-- README.txt
+Teste:
+1. Substitua index.html, logo.png e README.txt no GitHub.
+2. Aguarde a publicação.
+3. Confirme no rodapé: v6.3 compatibilidade.
+4. Gere um QR novo.
+5. Clique em "Ver conteúdo EPC".
+6. Confira a linha:
+   Christliche Kongregation in Deutschland e.V.
+7. Teste o mesmo QR no N26 e no Commerzbank.
 
-Como atualizar:
-1. Substitua os 3 arquivos no repositório CKD-SEPA.
-2. Faça Commit changes.
-3. Aguarde a publicação do GitHub Pages.
-4. Abra o site.
-5. Confirme no rodapé que aparece "v6.2".
-6. Gere um NOVO QR e teste no aplicativo bancário.
-
-IMPORTANTE:
-Se o rodapé não mostrar v6.2, o GitHub Pages ainda está servindo a versão antiga.
+Se o conteúdo EPC mostrar o nome completo e o Commerzbank continuar truncando,
+o problema está no fluxo de leitura/importação do app do banco.
 
 ADM:
 Clique 5 vezes no logo.

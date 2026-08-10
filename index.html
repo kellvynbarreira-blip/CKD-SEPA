@@ -73,6 +73,7 @@ input[type=range]{padding:0}
 <div class="buttonRow">
 <button type="button" id="generateBtn">Gerar QR</button>
 <button type="button" id="downloadQrBtn" class="primary">Baixar PNG</button>
+<button type="button" id="viewEpcBtn">Ver conteúdo EPC</button>
 </div>
 <div class="qrBox"><canvas id="qrCanvas" width="1400" height="1400"></canvas></div>
 </div>
@@ -191,10 +192,23 @@ input[type=range]{padding:0}
 
 <footer>
 <p id="status"></p>
-<p class="small">Formato EPC/SEPA/GiroCode • v6.2 • Beneficiário corrigido. Teste antes de imprimir.</p>
+<p class="small">Formato EPC/SEPA/GiroCode • v6.3 compatibilidade • EPC verificável. Teste antes de imprimir.</p>
 </footer>
 </section>
 </main>
+
+
+<div id="epcModal" class="modal hidden">
+<div class="modalCard">
+<h2>Conteúdo EPC do QR</h2>
+<p class="small">Este é exatamente o texto gravado dentro do QR Code.</p>
+<textarea id="epcContent" rows="14" readonly></textarea>
+<div class="buttonRow">
+<button type="button" id="copyEpcBtn" class="primary">Copiar conteúdo</button>
+<button type="button" id="closeEpcBtn">Fechar</button>
+</div>
+</div>
+</div>
 
 <div id="loginModal" class="modal hidden">
 <div class="modalCard">
@@ -267,6 +281,7 @@ function loadConfig() {
 }
 
 function saveConfig() {
+  config.beneficiary = LEGAL_BENEFICIARY;
   localStorage.setItem("ckdConfigV6", JSON.stringify(config));
 }
 
@@ -290,6 +305,10 @@ function finalReference(name) {
   return config.prefix + name;
 }
 
+function normalizeEpcText(value) {
+  return String(value || "").normalize("NFC");
+}
+
 function epcPayload(ref, cfg) {
   cfg = cfg || config;
   return [
@@ -297,15 +316,20 @@ function epcPayload(ref, cfg) {
     "002",
     "1",
     "SCT",
-    cfg.bic.replace(/\s+/g, ""),
-    LEGAL_BENEFICIARY,
-    cfg.iban.replace(/\s+/g, ""),
+    normalizeEpcText(cfg.bic.replace(/\s+/g, "")),
+    normalizeEpcText(LEGAL_BENEFICIARY),
+    normalizeEpcText(cfg.iban.replace(/\s+/g, "")),
     "",
     "",
     "",
-    ref,
+    normalizeEpcText(ref),
     ""
   ].join("\n");
+}
+
+function currentEpcPayload() {
+  var name = selectedName("refSelect", "customRef");
+  return epcPayload(finalReference(name), config);
 }
 
 function drawQr(canvas, ref, cfg, style) {
@@ -741,6 +765,20 @@ document.addEventListener("DOMContentLoaded", function() {
   el("customRef").addEventListener("input", renderQr);
   el("generateBtn").addEventListener("click", renderQr);
   el("downloadQrBtn").addEventListener("click", downloadQr);
+
+  el("viewEpcBtn").addEventListener("click", function() {
+    el("epcContent").value = currentEpcPayload();
+    el("epcModal").classList.remove("hidden");
+  });
+
+  el("closeEpcBtn").addEventListener("click", function() {
+    el("epcModal").classList.add("hidden");
+  });
+
+  el("copyEpcBtn").addEventListener("click", function() {
+    navigator.clipboard.writeText(el("epcContent").value);
+    setStatus("Conteúdo EPC copiado.");
+  });
 
   el("plateSelect").addEventListener("change", function(){ el("customPlateWrap").classList.toggle("hidden", el("plateSelect").value !== "__custom__"); renderPlate(); });
   el("customPlate").addEventListener("input", renderPlate);
