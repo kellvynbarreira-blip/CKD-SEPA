@@ -74,6 +74,7 @@ input[type=range]{padding:0}
 <button type="button" id="generateBtn">Gerar QR</button>
 <button type="button" id="downloadQrBtn" class="primary">Baixar PNG</button>
 <button type="button" id="viewEpcBtn">Ver conteúdo EPC</button>
+<button type="button" id="test001Btn">Teste BCD/001</button>
 </div>
 <div class="qrBox"><canvas id="qrCanvas" width="1400" height="1400"></canvas></div>
 </div>
@@ -192,7 +193,7 @@ input[type=range]{padding:0}
 
 <footer>
 <p id="status"></p>
-<p class="small">Formato EPC/SEPA/GiroCode • v6.3 compatibilidade • EPC verificável. Teste antes de imprimir.</p>
+<p class="small">Formato EPC/SEPA/GiroCode • v6.4 TESTE • BCD/002 + BCD/001 • correção M. Teste antes de imprimir.</p>
 </footer>
 </section>
 </main>
@@ -309,11 +310,12 @@ function normalizeEpcText(value) {
   return String(value || "").normalize("NFC");
 }
 
-function epcPayload(ref, cfg) {
+function epcPayload(ref, cfg, epcVersion) {
   cfg = cfg || config;
+  epcVersion = epcVersion || "002";
   return [
     "BCD",
-    "002",
+    epcVersion,
     "1",
     "SCT",
     normalizeEpcText(cfg.bic.replace(/\s+/g, "")),
@@ -332,14 +334,14 @@ function currentEpcPayload() {
   return epcPayload(finalReference(name), config);
 }
 
-function drawQr(canvas, ref, cfg, style) {
+function drawQr(canvas, ref, cfg, style, epcVersion) {
   cfg = cfg || config;
   style = style || cfg;
   new QRious({
     element: canvas,
-    value: epcPayload(ref, cfg),
+    value: epcPayload(ref, cfg, epcVersion || "002"),
     size: canvas.width,
-    level: "H",
+    level: "M",
     background: "white",
     foreground: "black"
   });
@@ -769,6 +771,14 @@ document.addEventListener("DOMContentLoaded", function() {
   el("viewEpcBtn").addEventListener("click", function() {
     el("epcContent").value = currentEpcPayload();
     el("epcModal").classList.remove("hidden");
+  });
+
+  el("test001Btn").addEventListener("click", function() {
+    var name = selectedName("refSelect", "customRef");
+    var ref = finalReference(name);
+    drawQr(el("qrCanvas"), ref, config, mainQrStyle(), "001");
+    el("finalRef").textContent = ref + " • TESTE BCD/001";
+    setStatus("QR de teste BCD/001 gerado. Escaneie agora no Commerzbank.");
   });
 
   el("closeEpcBtn").addEventListener("click", function() {
