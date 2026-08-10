@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CKD SEPA GiroCode v6</title>
+<title>CKD SEPA GiroCode v6.1</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#f4f1ea;font-family:Arial,Helvetica,sans-serif;color:#171717}
@@ -124,7 +124,7 @@ input[type=range]{padding:0}
 <div id="admBank" class="admPane active">
 <div class="notice">Dados usados no QR EPC/SEPA.</div>
 <label>Prefixo da referência</label><input id="admPrefix">
-<label>Beneficiário</label><input id="admName">
+<label>Beneficiário</label><input id="admName" readonly>
 <label>IBAN</label><input id="admIban">
 <label>BIC</label><input id="admBic">
 </div>
@@ -191,7 +191,7 @@ input[type=range]{padding:0}
 
 <footer>
 <p id="status"></p>
-<p class="small">Formato EPC/SEPA/GiroCode. Teste antes de imprimir.</p>
+<p class="small">Formato EPC/SEPA/GiroCode. Teste antes de imprimir. • v6.1</p>
 </footer>
 </section>
 </main>
@@ -217,7 +217,7 @@ input[type=range]{padding:0}
 var DEFAULT_CONFIG = {
   adminPassword: "CKD2025",
   prefix: "CKD-",
-  beneficiary: "CHRISTLICHE KONGREGATION IN DEUTSCHLAND e.V.",
+  beneficiary: "Christliche Kongregation in Deutschland e.V.",
   iban: "DE05340600940000734509",
   bic: "VBRSDE33XXX",
   logoPercent: 20,
@@ -243,6 +243,7 @@ var DEFAULT_CONFIG = {
 };
 
 var config = loadConfig();
+config.beneficiary = "Christliche Kongregation in Deutschland e.V.";
 var clicks = 0;
 var clickTimer = null;
 
@@ -252,14 +253,7 @@ function clone(obj) { return JSON.parse(JSON.stringify(obj)); }
 function loadConfig() {
   try {
     var saved = localStorage.getItem("ckdConfigV6");
-    if (saved) {
-      var loaded = Object.assign(clone(DEFAULT_CONFIG), JSON.parse(saved));
-      if (loaded.beneficiary === "CHRISTLICHE KONGREGATION IN DEUTSCH.") {
-        loaded.beneficiary = "CHRISTLICHE KONGREGATION IN DEUTSCHLAND e.V.";
-        localStorage.setItem("ckdConfigV6", JSON.stringify(loaded));
-      }
-      return loaded;
-    }
+    if (saved) return Object.assign(clone(DEFAULT_CONFIG), JSON.parse(saved));
   } catch (e) {}
   return clone(DEFAULT_CONFIG);
 }
@@ -296,7 +290,7 @@ function epcPayload(ref, cfg) {
     "1",
     "SCT",
     cfg.bic.replace(/\s+/g, ""),
-    cfg.beneficiary,
+    "Christliche Kongregation in Deutschland e.V.",
     cfg.iban.replace(/\s+/g, ""),
     "",
     "",
@@ -414,7 +408,7 @@ function populateSelects() {
 }
 
 function updateBank() {
-  el("bankName").textContent = config.beneficiary;
+  el("bankName").textContent = "Christliche Kongregation in Deutschland e.V.";
   el("bankIban").textContent = formatIban(config.iban);
   el("bankBic").textContent = config.bic;
 }
@@ -481,7 +475,7 @@ function renderPlateOnCanvas(canvas, name, size, done) {
 
       ctx.fillStyle = "#666";
       ctx.font = "400 " + Math.round(W * 0.020) + "px Arial";
-      ctx.fillText(config.beneficiary, W / 2, H * 0.925);
+      ctx.fillText("Christliche Kongregation in Deutschland e.V.", W / 2, H * 0.925);
       ctx.fillText(formatIban(config.iban) + "  •  " + config.bic, W / 2, H * 0.95);
       if (done) done();
     }, 250);
@@ -593,7 +587,7 @@ function readPlateStyleFromAdm() {
 function fillAdmin() {
   el("admPassword").value = config.adminPassword;
   el("admPrefix").value = config.prefix;
-  el("admName").value = config.beneficiary;
+  el("admName").value = "Christliche Kongregation in Deutschland e.V.";
   el("admIban").value = config.iban;
   el("admBic").value = config.bic;
   el("admCongregations").value = config.congregations.join("\n");
@@ -644,7 +638,7 @@ function saveAdmin() {
 
   config.adminPassword = el("admPassword").value.trim() || "CKD2025";
   config.prefix = el("admPrefix").value.trim() || "CKD-";
-  config.beneficiary = el("admName").value.trim();
+  config.beneficiary = "Christliche Kongregation in Deutschland e.V.";
   config.iban = el("admIban").value.replace(/\s+/g, "").trim();
   config.bic = el("admBic").value.replace(/\s+/g, "").trim();
   config.congregations = el("admCongregations").value.split("\n").map(function(x){return x.trim();}).filter(Boolean);
