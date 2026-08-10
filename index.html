@@ -193,7 +193,7 @@ input[type=range]{padding:0}
 
 <footer>
 <p id="status"></p>
-<p class="small">Formato EPC/SEPA/GiroCode • v6 FINAL • Beneficiário completo. Teste antes de imprimir.</p>
+<p class="small">Formato EPC/SEPA/GiroCode • v6 FINAL • Placa ajustada. Teste antes de imprimir.</p>
 </footer>
 </section>
 </main>
@@ -468,13 +468,13 @@ function renderPlateOnCanvas(canvas, name, size, done) {
     ctx.fillStyle = "#111";
     ctx.textAlign = "center";
     ctx.font = "700 " + Math.round(W * 0.065) + "px Arial";
-    ctx.fillText(name, W / 2, H * 0.245);
+    ctx.fillText(name, W / 2, H * 0.265);
 
     ctx.font = "400 " + Math.round(W * 0.032) + "px Arial";
-    ctx.fillText(config.plateDe, W / 2, H * 0.292);
+    ctx.fillText(config.plateDe, W / 2, H * 0.312);
 
     ctx.font = "400 " + Math.round(W * 0.030) + "px Arial";
-    ctx.fillText(config.platePt, W / 2, H * 0.33);
+    ctx.fillText(config.platePt, W / 2, H * 0.35);
 
     var qrSize = Math.round(W * (Number(config.plateQrPercent) / 100));
     var temp = document.createElement("canvas");
@@ -483,7 +483,7 @@ function renderPlateOnCanvas(canvas, name, size, done) {
     drawQr(temp, ref, config, plateQrStyle());
 
     setTimeout(function() {
-      ctx.drawImage(temp, (W - qrSize) / 2, H * 0.39, qrSize, qrSize);
+      ctx.drawImage(temp, (W - qrSize) / 2, H * 0.41, qrSize, qrSize);
 
       ctx.fillStyle = "#111";
       ctx.font = "700 " + Math.round(W * 0.034) + "px Arial";

@@ -1,24 +1,11 @@
-CKD SEPA GiroCode v6 FINAL
+CKD SEPA GiroCode v6 FINAL — PLACA AJUSTADA
 
-Esta é a versão limpa de produção.
-
-Mantido:
-- QR EPC/SEPA padrão BCD/002
-- nível de correção M
-- beneficiário completo:
-  Christliche Kongregation in Deutschland e.V.
-- ADM
-- controles do QR principal
-- controles separados do QR das placas
-- placas A5/A4
-- download PNG
-- download PDF
-- PDF único com todas as placas
-
-Removido:
-- botão de teste BCD/001
-- botão de diagnóstico EPC
-- recursos temporários de teste
+Alteração feita:
+- O nome da casa de oração nas placas A5/A4 foi movido um pouco mais para baixo.
+- O logo superior não foi alterado.
+- Os textos em alemão e português foram reposicionados para manter o equilíbrio.
+- O QR também foi deslocado levemente para baixo para preservar o espaçamento visual.
+- QR principal, ADM, dados bancários e demais funções continuam iguais.
 
 Arquivos para subir no GitHub:
 - index.html
@@ -27,11 +14,6 @@ Arquivos para subir no GitHub:
 
 Como atualizar:
 1. Substitua os 3 arquivos no repositório CKD-SEPA.
-2. Commit changes.
+2. Faça Commit changes.
 3. Aguarde o GitHub Pages atualizar.
-4. Abra o site e confirme no rodapé:
-   v6 FINAL
-
-ADM:
-Clique 5 vezes no logo.
-Senha padrão: CKD2025.
+4. Abra o site e pressione Ctrl + F5.
