@@ -1,13 +1,29 @@
-CKD SEPA GiroCode v6.1 — correção do beneficiário
+CKD SEPA GiroCode v6.2 — correção definitiva do beneficiário
 
-Nome fixado no QR EPC/SEPA:
+CORREÇÃO:
+O QR EPC/SEPA agora usa SEMPRE este nome legal:
 Christliche Kongregation in Deutschland e.V.
 
-IMPORTANTE:
-1. Substitua index.html, logo.png e README.txt no GitHub.
-2. Faça Commit changes.
-3. Aguarde o GitHub Pages publicar.
-4. Abra o site e confirme que aparece “v6.1” no rodapé.
-5. Gere um QR NOVO e teste no banco.
+A versão 6.2 também corrige automaticamente configurações antigas salvas
+no navegador (localStorage), que eram a causa do nome abreviado continuar
+aparecendo mesmo após substituir o index.html.
 
-Esta versão força o nome correto mesmo se o navegador tiver configurações antigas em localStorage.
+Arquivos para subir no GitHub:
+- index.html
+- logo.png
+- README.txt
+
+Como atualizar:
+1. Substitua os 3 arquivos no repositório CKD-SEPA.
+2. Faça Commit changes.
+3. Aguarde a publicação do GitHub Pages.
+4. Abra o site.
+5. Confirme no rodapé que aparece "v6.2".
+6. Gere um NOVO QR e teste no aplicativo bancário.
+
+IMPORTANTE:
+Se o rodapé não mostrar v6.2, o GitHub Pages ainda está servindo a versão antiga.
+
+ADM:
+Clique 5 vezes no logo.
+Senha padrão: CKD2025.

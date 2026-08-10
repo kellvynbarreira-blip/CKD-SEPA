@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CKD SEPA GiroCode v6.1</title>
+<title>CKD SEPA GiroCode v6</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#f4f1ea;font-family:Arial,Helvetica,sans-serif;color:#171717}
@@ -124,7 +124,7 @@ input[type=range]{padding:0}
 <div id="admBank" class="admPane active">
 <div class="notice">Dados usados no QR EPC/SEPA.</div>
 <label>Prefixo da referência</label><input id="admPrefix">
-<label>Beneficiário</label><input id="admName" readonly>
+<label>Beneficiário</label><input id="admName">
 <label>IBAN</label><input id="admIban">
 <label>BIC</label><input id="admBic">
 </div>
@@ -191,7 +191,7 @@ input[type=range]{padding:0}
 
 <footer>
 <p id="status"></p>
-<p class="small">Formato EPC/SEPA/GiroCode. Teste antes de imprimir. • v6.1</p>
+<p class="small">Formato EPC/SEPA/GiroCode • v6.2 • Beneficiário corrigido. Teste antes de imprimir.</p>
 </footer>
 </section>
 </main>
@@ -213,6 +213,8 @@ input[type=range]{padding:0}
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script>
 "use strict";
+
+var LEGAL_BENEFICIARY = "Christliche Kongregation in Deutschland e.V.";
 
 var DEFAULT_CONFIG = {
   adminPassword: "CKD2025",
@@ -243,7 +245,6 @@ var DEFAULT_CONFIG = {
 };
 
 var config = loadConfig();
-config.beneficiary = "Christliche Kongregation in Deutschland e.V.";
 var clicks = 0;
 var clickTimer = null;
 
@@ -251,11 +252,18 @@ function el(id) { return document.getElementById(id); }
 function clone(obj) { return JSON.parse(JSON.stringify(obj)); }
 
 function loadConfig() {
+  var cfg = clone(DEFAULT_CONFIG);
   try {
     var saved = localStorage.getItem("ckdConfigV6");
-    if (saved) return Object.assign(clone(DEFAULT_CONFIG), JSON.parse(saved));
+    if (saved) cfg = Object.assign(cfg, JSON.parse(saved));
   } catch (e) {}
-  return clone(DEFAULT_CONFIG);
+
+  // MIGRAÇÃO V6.2: corrige automaticamente qualquer nome antigo salvo no navegador.
+  cfg.beneficiary = LEGAL_BENEFICIARY;
+  try {
+    localStorage.setItem("ckdConfigV6", JSON.stringify(cfg));
+  } catch (e) {}
+  return cfg;
 }
 
 function saveConfig() {
@@ -290,7 +298,7 @@ function epcPayload(ref, cfg) {
     "1",
     "SCT",
     cfg.bic.replace(/\s+/g, ""),
-    "Christliche Kongregation in Deutschland e.V.",
+    LEGAL_BENEFICIARY,
     cfg.iban.replace(/\s+/g, ""),
     "",
     "",
@@ -408,7 +416,7 @@ function populateSelects() {
 }
 
 function updateBank() {
-  el("bankName").textContent = "Christliche Kongregation in Deutschland e.V.";
+  el("bankName").textContent = LEGAL_BENEFICIARY;
   el("bankIban").textContent = formatIban(config.iban);
   el("bankBic").textContent = config.bic;
 }
@@ -475,7 +483,7 @@ function renderPlateOnCanvas(canvas, name, size, done) {
 
       ctx.fillStyle = "#666";
       ctx.font = "400 " + Math.round(W * 0.020) + "px Arial";
-      ctx.fillText("Christliche Kongregation in Deutschland e.V.", W / 2, H * 0.925);
+      ctx.fillText(LEGAL_BENEFICIARY, W / 2, H * 0.925);
       ctx.fillText(formatIban(config.iban) + "  •  " + config.bic, W / 2, H * 0.95);
       if (done) done();
     }, 250);
@@ -587,7 +595,8 @@ function readPlateStyleFromAdm() {
 function fillAdmin() {
   el("admPassword").value = config.adminPassword;
   el("admPrefix").value = config.prefix;
-  el("admName").value = "Christliche Kongregation in Deutschland e.V.";
+  el("admName").value = LEGAL_BENEFICIARY;
+  el("admName").readOnly = true;
   el("admIban").value = config.iban;
   el("admBic").value = config.bic;
   el("admCongregations").value = config.congregations.join("\n");
@@ -638,7 +647,7 @@ function saveAdmin() {
 
   config.adminPassword = el("admPassword").value.trim() || "CKD2025";
   config.prefix = el("admPrefix").value.trim() || "CKD-";
-  config.beneficiary = "Christliche Kongregation in Deutschland e.V.";
+  config.beneficiary = LEGAL_BENEFICIARY;
   config.iban = el("admIban").value.replace(/\s+/g, "").trim();
   config.bic = el("admBic").value.replace(/\s+/g, "").trim();
   config.congregations = el("admCongregations").value.split("\n").map(function(x){return x.trim();}).filter(Boolean);
@@ -768,6 +777,10 @@ document.addEventListener("DOMContentLoaded", function() {
       setStatus("Copiado.");
     });
   });
+
+  // Garante que a configuração antiga não possa voltar.
+  config.beneficiary = LEGAL_BENEFICIARY;
+  saveConfig();
 
   init();
 });
