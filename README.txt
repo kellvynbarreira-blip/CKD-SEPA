@@ -28,3 +28,8 @@ Instruções:
 ADM:
 Clique 5 vezes no logo.
 Senha padrão: CKD2025.
+
+
+CORREÇÃO v6.1:
+Beneficiário EPC/SEPA corrigido para CHRISTLICHE KONGREGATION IN DEUTSCHLAND e.V.
+A correção também atualiza automaticamente a configuração antiga salva no navegador.

@@ -217,7 +217,7 @@ input[type=range]{padding:0}
 var DEFAULT_CONFIG = {
   adminPassword: "CKD2025",
   prefix: "CKD-",
-  beneficiary: "CHRISTLICHE KONGREGATION IN DEUTSCHLAND e.V",
+  beneficiary: "CHRISTLICHE KONGREGATION IN DEUTSCHLAND e.V.",
   iban: "DE05340600940000734509",
   bic: "VBRSDE33XXX",
   logoPercent: 20,
@@ -252,7 +252,14 @@ function clone(obj) { return JSON.parse(JSON.stringify(obj)); }
 function loadConfig() {
   try {
     var saved = localStorage.getItem("ckdConfigV6");
-    if (saved) return Object.assign(clone(DEFAULT_CONFIG), JSON.parse(saved));
+    if (saved) {
+      var loaded = Object.assign(clone(DEFAULT_CONFIG), JSON.parse(saved));
+      if (loaded.beneficiary === "CHRISTLICHE KONGREGATION IN DEUTSCH.") {
+        loaded.beneficiary = "CHRISTLICHE KONGREGATION IN DEUTSCHLAND e.V.";
+        localStorage.setItem("ckdConfigV6", JSON.stringify(loaded));
+      }
+      return loaded;
+    }
   } catch (e) {}
   return clone(DEFAULT_CONFIG);
 }
