@@ -1,25 +1,36 @@
-CKD SEPA GiroCode v6.4 TESTE
+CKD SEPA GiroCode v6 FINAL
 
-Objetivo:
-Comparar a leitura do Commerzbank entre EPC BCD/002 e BCD/001.
+Esta é a versão limpa de produção.
 
-Beneficiário mantido:
-Christliche Kongregation in Deutschland e.V.
+Mantido:
+- QR EPC/SEPA padrão BCD/002
+- nível de correção M
+- beneficiário completo:
+  Christliche Kongregation in Deutschland e.V.
+- ADM
+- controles do QR principal
+- controles separados do QR das placas
+- placas A5/A4
+- download PNG
+- download PDF
+- PDF único com todas as placas
 
-Nesta versão:
-- Gerar QR = BCD/002
-- Teste BCD/001 = variante de teste
-- Ambos usam o mesmo IBAN, BIC, nome e referência
-- QR com nível de correção M
-- ADM e placas A5/A4 permanecem iguais
+Removido:
+- botão de teste BCD/001
+- botão de diagnóstico EPC
+- recursos temporários de teste
+
+Arquivos para subir no GitHub:
+- index.html
+- logo.png
+- README.txt
 
 Como atualizar:
-1. Substitua index.html, logo.png e README.txt no GitHub.
-2. Faça Commit changes.
-3. Aguarde a publicação.
-4. Confirme no rodapé: v6.4 TESTE.
-5. Teste primeiro Gerar QR.
-6. Depois teste BCD/001 no Commerzbank.
+1. Substitua os 3 arquivos no repositório CKD-SEPA.
+2. Commit changes.
+3. Aguarde o GitHub Pages atualizar.
+4. Abra o site e confirme no rodapé:
+   v6 FINAL
 
 ADM:
 Clique 5 vezes no logo.
